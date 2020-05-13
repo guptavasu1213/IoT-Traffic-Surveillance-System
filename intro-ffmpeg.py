@@ -2,8 +2,16 @@ import subprocess
 import ffmpeg
 from cv2 import VideoCapture, CAP_PROP_FRAME_COUNT, CAP_PROP_FPS
 
-def remove_audio():
-	pass
+def remove_audio(input_file, output_file):
+	"""
+	Removing the audio from the input file and saves it as the output file.
+	The file is not re-encoded as the video encoding scheme is copied.
+	:param input_file: input file name
+	:param output_file: output file name
+	"""
+	cmd = "ffmpeg -i " + input_file + " -c:v copy -an " + output_file	
+	subprocess.run(cmd, shell=True)
+	print(cmd)
 
 def reduceFPS():
 	pass
@@ -96,7 +104,7 @@ input_stream = ffmpeg.input(input_file)
 # print(length_in_seconds)
 split_video_into_chunks(input_stream, input_file, "output_file.mp4", 5)
 # inputStream.filter('fps', fps=1, round='up').output(outputFile).run()
-
+remove_audio(input_file, "silentFile.mp4")
 # stream = ffmpeg.input('in.mp4')
 # stream = ffmpeg.zoompan(stream, fps=10)
 # stream = ffmpeg.output(stream, 'out.mp4')

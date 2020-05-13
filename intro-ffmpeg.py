@@ -24,12 +24,19 @@ def reduceFPS(input_file, output_file, new_fps):
 def decreaseBitRate():
 	pass
 
-def changeFormat():
-	pass
+#Learn more about different ways of compressing ###
+# Using H.265 by default
+def compress(input_file, output_file, encoding="libx265"):
+	"""
+	:param input_file: input file name
+	:param output_file: output file name
+	"""
+	# Example: ffmpeg -i bridge.mp4 -vcodec libx265 lowBridge.mp4
+	cmd = "ffmpeg -i " + input_file + " -vcodec " + encoding + " " + output_file	
+	subprocess.run(cmd, shell=True)
+	print(cmd)
 
-#Learn more about different ways of compressing 
-def compress():
-	pass
+
 
 def get_video_length(input_file):
 	"""

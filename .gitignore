@@ -3,4 +3,6 @@
 *.mov
 *.avi
 *.weights
+*.h5
+nohup.out
 __pycache__/**

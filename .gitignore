@@ -4,5 +4,5 @@
 *.avi
 *.weights
 *.h5
+**/__pycache__/
 nohup.out
-__pycache__/**

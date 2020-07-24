@@ -12,7 +12,7 @@ def remove_audio(input_file, output_file):
 	subprocess.run(cmd, shell=True)
 	print(cmd)
 
-def reduceFPS(input_file, output_file, new_fps):
+def set_fps(input_file, output_file, new_fps):
 	"""
 	:param input_file: input file name
 	:param output_file: output file name
@@ -23,11 +23,11 @@ def reduceFPS(input_file, output_file, new_fps):
 		print("The fps is greater than or equal to the original video, so no change is made")
 		return
 
-	cmd = "ffmpeg -i " + input_file + " -r " + str(new_fps) + " " + output_file	
+	cmd = "ffmpeg -i " + input_file + " -r " + str(new_fps) + " -an -y " + output_file	
 	subprocess.run(cmd, shell=True)
 	print(cmd)
 
-def decrease_resolution(input, output, resolution):
+def set_resolution(input, output, resolution):
 	'''
 	Returns false when unsuccessful
 	Returns true when successful
@@ -39,7 +39,7 @@ def decrease_resolution(input, output, resolution):
 		return True
 	except:
 		return False
-def decrease_bit_rate(input, output, bitrate):
+def set_bitrate(input, output, bitrate):
 	cmd = "ffmpeg -i " + input + " -b:v " + str(bitrate) + "k -an -y " + output 
 	print(cmd)
 	subprocess.run(cmd, shell=True)

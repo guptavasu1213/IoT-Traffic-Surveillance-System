@@ -9,3 +9,4 @@ thai_cam_vid_1.mp4:0,480,1920,480
 Singapore_Road_CTE_Tollroad_Singapore.mp4:0,180,254,294; 106,416,725,416; 677,269,1065,285
 Pexels_Videos_2103099.mp4:615,1154,3700,1154; 0,460,693,950
 Cars_On_Highway.mp4:0,800,1920,600
+nightSouthKorea-fps-7.mov:0,510,1920,510

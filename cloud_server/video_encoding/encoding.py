@@ -51,7 +51,6 @@ def compress(input_file, output_file, encoding="libx265"):
 	:param input_file: input file name
 	:param output_file: output file name
 	"""	
-
 	#################################################Quantization factor can also be added
 	# Example: ffmpeg -i bridge.mp4 -vcodec libx265 [-crf 28] lowBridge.mp4
 	cmd = "ffmpeg -i " + input_file + " -vcodec " + encoding + " " + output_file	
@@ -68,6 +67,15 @@ def get_video_length(input_file):
 	total_frames = video.get(CAP_PROP_FRAME_COUNT)
 	return float(total_frames) / float(fps)
 
+def trim_video(input_file, output_file, start_time, length_in_seconds):
+	'''
+	Trims a video (without re-encoding) with the given start and the length of clip
+	'''
+	cmd = "ffmpeg -ss " + str(start_time) + " -i " + input_file + " -c copy -t " + str(length_in_seconds) + \
+			" -y " + output_file	
+	subprocess.run(cmd, shell=True)
+
+	print(cmd)
 
 def split_video_into_chunks(input_file, output_file, seconds):
 	"""

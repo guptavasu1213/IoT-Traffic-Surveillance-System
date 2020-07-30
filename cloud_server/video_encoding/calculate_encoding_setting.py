@@ -33,7 +33,19 @@ def getVideoDetails(filepath):
 			metadata['fps'] = fps.split()[0]
 	return metadata
 
+def getFileResolution(file_path):
+	'''
+	Resolution string is formatted like 'WxH' and this function seperates the 
+	W and H as an integer and returns it back as an int array
+	'''
+	resolution = getVideoDetails(file_path)['resolution']
+	return [int(val) for val in resolution.strip().split('x')]
+
 def getLineCoordinates(fileName):
+	'''
+	Extracts the line(s) coordinates for the given video files
+	fileName: The file name of the video
+	'''
 	#Open line coordinates file
 	with open(line_coordinates_filepath) as file:
 		coordinatesFile = file.read()
@@ -70,7 +82,7 @@ def compute_vehicle_count(file_path, line_coordinates, resolutionRatio='1x1'):
 	file_path = os.path.abspath(file_path)
 
 	os.chdir('../vehicle_counting_algorithm')
-	########USE ABS PATH to file
+
 	cmd = "python3 main.py -i " + file_path + " -lc \"" + \
 		str(line_coordinates) + "\"" + " -r \"" + resolutionRatio +  "\" -cf " + count_file_name		
 	print("Running command:\n" + cmd)
@@ -104,7 +116,7 @@ def calculate_bitrate(file_path, line_coordinates, vehicle_count_high_res):
 		detection_error = abs(vehicle_count_high_res-vehicle_count_low_res)/vehicle_count_high_res
 		print(detection_error, THRESHOLD)
 		if (detection_error <= THRESHOLD):
-			break
+			return bitrate
 		#If the count is outside the threshold, then increase the bit rate
 		else:
 			bitrate = bitrate+step
@@ -113,9 +125,8 @@ def calculate_resolution(file_path, line_coordinates, vehicle_count_high_res):
 	'''
 	Calculate the lowest resolution while having the detection loss within the threshold
 	'''
-	originalResolution = getVideoDetails(file_path)['resolution']
-	originalResolution = [int(val) for val in originalResolution.strip().split('x')]
-	
+	originalResolution = getFileResolution(file_path)
+
 	file_name, extension = get_file_name_from_path(file_path), get_ext_from_path(file_path)
 
 	resolutionWidth = 200 
@@ -134,9 +145,7 @@ def calculate_resolution(file_path, line_coordinates, vehicle_count_high_res):
 			os.remove(new_file_path)
 			continue
 
-		decreasedResolution = getVideoDetails(new_file_path)['resolution']
-		decreasedResolution = [int(val) for val in decreasedResolution.strip().split('x')]
-
+		decreasedResolution = getFileResolution(new_file_path)
 		resolutionRatio = str(decreasedResolution[0]/originalResolution[0])+'x'+str(decreasedResolution[1]/originalResolution[1])
 
 		#Calculate the vehicle count on the low encoding video
@@ -148,7 +157,7 @@ def calculate_resolution(file_path, line_coordinates, vehicle_count_high_res):
 		detection_error = abs(vehicle_count_high_res-vehicle_count_low_res)/vehicle_count_high_res
 		print(detection_error, THRESHOLD)
 		if (detection_error <= THRESHOLD):
-			break
+			return resolutionWidth
 		#If the count is outside the threshold, then increase the resolution
 		else:
 			resolutionWidth = resolutionWidth+step
@@ -166,7 +175,7 @@ def calculate_fps(file_path, line_coordinates, vehicle_count_high_res):
 	while True:
 		#Convert the video to given fps
 		new_file_path = "encoded_videos/" + file_name +'-fps-'+str(fps)+ "." + extension
-		# set_fps(file_path, new_file_path, fps)
+		set_fps(file_path, new_file_path, fps)
 
 		#Calculate the vehicle count on the low encoding video
 		vehicle_count_low_res = compute_vehicle_count(new_file_path, line_coordinates)
@@ -177,25 +186,28 @@ def calculate_fps(file_path, line_coordinates, vehicle_count_high_res):
 		detection_error = abs(vehicle_count_high_res-vehicle_count_low_res)/vehicle_count_high_res
 		print(detection_error, THRESHOLD)
 		if (detection_error <= THRESHOLD):
-			break
+			return fps
 		#If the count is outside the threshold, then increase the fps
 		else:
 			fps = fps+step
 
-def calculate_encoding(file_path):
-	file_name_with_ext = file_path.split("/")[-1] #With extension
+def calculate_encoding(file_path, original_file_name_for_coord):
+	# file_name_with_ext = file_path.split("/")[-1] #With extension
 
-	line_coordinates = getLineCoordinates(file_name_with_ext)
+	line_coordinates = getLineCoordinates(original_file_name_for_coord)
 	
 	#When coordinates are not found
 	if not line_coordinates:
+		print("Line coordinates not found")
 		return
 
 	#Calculate vehicle count in the original video
-	# vehicle_count_high_res = compute_vehicle_count(file_path, line_coordinates)
+	vehicle_count_high_res = compute_vehicle_count(file_path, line_coordinates)
 
-	# calculate_bitrate(file_path, line_coordinates, vehicle_count_high_res)
-	# calculate_fps(file_path, line_coordinates, vehicle_count_high_res)
-	calculate_resolution(file_path, line_coordinates, 28)
+	br  = calculate_bitrate(file_path, line_coordinates, vehicle_count_high_res)
+	fps = calculate_fps(file_path, line_coordinates, vehicle_count_high_res)
+	res = calculate_resolution(file_path, line_coordinates, vehicle_count_high_res)
 	
-calculate_encoding("../streamed_files/nightSouthKorea.mov")
+	return br, fps, res
+
+# calculate_encoding("../streamed_files/nightSouthKorea.mov")

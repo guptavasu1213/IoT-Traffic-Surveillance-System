@@ -5,4 +5,6 @@
 *.weights
 *.h5
 **/__pycache__/
+cloud_server/video_encoding/count_logs/*
+cloud_server/video_encoding/.fuse_*
 nohup.out

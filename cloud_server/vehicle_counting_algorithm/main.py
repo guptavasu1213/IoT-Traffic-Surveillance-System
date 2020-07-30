@@ -38,6 +38,8 @@ config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
 session = InteractiveSession(config=config)
 
+from tqdm import tqdm
+
 #Line counter method
 from counter import *
 
@@ -76,7 +78,7 @@ def main(yolo):
 
 
 	print("========>", args["input"])
-	writeVideo_flag = True
+	writeVideo_flag = False
 	video_capture = cv2.VideoCapture(args["input"])
 	fps = video_capture.get(cv2.CAP_PROP_FPS)
 
@@ -96,14 +98,18 @@ def main(yolo):
 
 	# Line intersection counter
 	line_counter = Counter(args['lineCoordinates'], args['resolutionRatio'])
+	total_frames = video_capture.get(cv2.CAP_PROP_FRAME_COUNT)
+
+	#Initializing the progress bar
+	pbar = tqdm(total=total_frames)
 
 	# main loop
-	while True:
+	while num_frames < total_frames:
 		# os.system('clear')
 		num_frames+= 1
-		print("Current Frame:\t", str(num_frames) + '/' + str(video_capture.get(cv2.CAP_PROP_FRAME_COUNT)))
+		# print("Current Frame:\t", str(num_frames) + '/' + str())
 		#Calculating fps each second
-		displayFPS(start_time, num_frames)
+		# displayFPS(start_time, num_frames)
 
 		ret, frame = video_capture.read()  # frame shape 640*480*3
 		if ret != True:
@@ -187,17 +193,21 @@ def main(yolo):
 		if writeVideo_flag:
 			# save a frame
 			out.write(frame)
-			frame_index = frame_index + 1
+			frame_index = frame_index + input_filepath
 
 
 		fps  = ( fps + (1./(time.time()-t1)) ) / 2
-		out.write(frame)
-		frame_index = frame_index + 1
+		# out.write(frame)
+		# frame_index = frame_index + 1
+
+		pbar.update(1)
+
 
 		# Press Q to stop!
 		if cv2.waitKey(1) & 0xFF == ord('q'):
 			break
 
+	pbar.close()
 	print("[Finish]")
 	end = time.time()
 	

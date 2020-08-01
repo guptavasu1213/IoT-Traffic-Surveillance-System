@@ -6,69 +6,76 @@ This file is not used in the deployment. The sole purpose of this file is to cal
 from calculate_encoding_setting import *
 from encoding import *
 import csv
+import time
 
 #Open coordinates file
 with open('../streamed_files/coordinates.txt') as file:
 	coordinatesFile = file.read()
 
+timings = [[15, "00:15", 300-15], [30, "00:30", 300-30], [45, "00:45", 300-45], [75, "01:15", 300-75], [90, "01:30", 300-90]]
+
 videoFolder = "../streamed_files/"
 # Run detections on all files in the inputVideos directory
 for fileName in os.listdir(videoFolder):
-	input_filepath = videoFolder + fileName
-	if (fileName == 'to-count' or fileName == 'done' or fileName == "kukuNew.mp4"):
-		continue
+	for timing in timings:
+		start_time = time.time()
 
-	fileNameIndex = coordinatesFile.find(fileName)
-	newlineIndex = coordinatesFile.find('\n', fileNameIndex)
-	
-	if fileNameIndex == -1:
-		print("No line_coordinates found")
-		continue
+		input_filepath = videoFolder + fileName
+		if (fileName == 'to-count' or fileName == 'done'):
+			continue
 
-	small_filepath = "./trimmed_videos/smallTrimmedClip.mp4"
-	big_filepath = "./trimmed_videos/largeTrimmedClip.mp4"
+		fileNameIndex = coordinatesFile.find(fileName)
+		newlineIndex = coordinatesFile.find('\n', fileNameIndex)
+		
+		if fileNameIndex == -1:
+			print("No line_coordinates found")
+			continue
 
-	num_mins = 4
-	start_clip_length = 60
+		small_filepath = "./trimmed_videos/smallTrimmedClip.mp4"
+		big_filepath = "./trimmed_videos/largeTrimmedClip.mp4"
+		
+		start_clip_length, line_2_start, line_2_end = timing
 
-	trim_video(input_filepath, small_filepath, "00:00", start_clip_length)
-	trim_video(input_filepath, big_filepath, "01:00", (60*num_mins))
+		trim_video(input_filepath, small_filepath, "00:00", start_clip_length)
+		trim_video(input_filepath, big_filepath, line_2_start, line_2_end)
 
-	# Calculating the best encoding params for the original small video segment 
-	fps, bitrate, resolution_width = calculate_encoding(small_filepath, fileName)
-	#========== Testing the encoding parameters
-	line_coordinates = getLineCoordinates(fileName)
+		# Calculating the best encoding params for the original small video segment 
+		bitrate, fps, resolution_width = calculate_encoding(small_filepath, fileName)
+		#========== Testing the encoding parameters
+		line_coordinates = getLineCoordinates(fileName)
 
-	#When coordinates are not found
-	if not line_coordinates:
-		print("Coordinates not found")
-		continue
+		#When coordinates are not found
+		if not line_coordinates:
+			print("Coordinates not found")
+			continue
 
-	#Test the encoding parameters on the original video
-	original_count = compute_vehicle_count(big_filepath, line_coordinates)
+		#Test the encoding parameters on the original video
+		original_count = compute_vehicle_count(big_filepath, line_coordinates)
 
-	#Test the results on fps
-	fps_path = "./trimmed_videos/largeTrimmedClip-fps.mp4"
-	set_fps(big_filepath, fps_path, fps)
-	fps_count = compute_vehicle_count(fps_path, line_coordinates)
+		#Test the results on fps
+		fps_path = "./trimmed_videos/largeTrimmedClip-fps.mp4"
+		set_fps(big_filepath, fps_path, fps)
+		fps_count = compute_vehicle_count(fps_path, line_coordinates)
 
-	#Test the results on bitrate
-	br_path = "./trimmed_videos/largeTrimmedClip-bitrate.mp4"
-	set_bitrate(big_filepath, br_path, bitrate)
-	br_count = compute_vehicle_count(br_path, line_coordinates)
+		#Test the results on bitrate
+		br_path = "./trimmed_videos/largeTrimmedClip-bitrate.mp4"
+		set_bitrate(big_filepath, br_path, bitrate)
+		br_count = compute_vehicle_count(br_path, line_coordinates)
 
-	#Test the results on res
-	res_path = "./trimmed_videos/largeTrimmedClip-resolution.mp4"
-	set_resolution(big_filepath, res_path, resolution_width)
+		#Test the results on res
+		res_path = "./trimmed_videos/largeTrimmedClip-resolution.mp4"
+		set_resolution(big_filepath, res_path, resolution_width)
 
-	originalResolution = getFileResolution(big_filepath)
-	decreasedResolution = getFileResolution(res_path)
+		originalResolution = getFileResolution(big_filepath)
+		decreasedResolution = getFileResolution(res_path)
 
-	resolutionRatio = str(decreasedResolution[0]/originalResolution[0])+'x'+str(decreasedResolution[1]/originalResolution[1])
+		resolutionRatio = str(decreasedResolution[0]/originalResolution[0])+'x'+str(decreasedResolution[1]/originalResolution[1])
 
-	res_count = compute_vehicle_count(res_path, line_coordinates, resolutionRatio)
+		res_count = compute_vehicle_count(res_path, line_coordinates, resolutionRatio)
 
-	#Log the counts in a file
-	with open("./count_logs/optimal_param_count.csv", 'a', newline='') as file:
-		writer = csv.writer(file)
-		writer.writerow([fileName, str(start_clip_length), str(original_count), str(fps_count), str(br_count), str(res_count)])
+		computation_time = time.time() - start_time
+		#Log the counts in a file
+		with open("./count_logs/optimal_param_count.csv", 'a', newline='') as file:
+			writer = csv.writer(file)
+			writer.writerow([fileName, str(start_clip_length), str(original_count), str(fps_count), \
+			str(br_count), str(res_count), str(bitrate), str(fps), str(resolution_width), str(computation_time)])

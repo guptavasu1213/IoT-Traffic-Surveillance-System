@@ -203,11 +203,10 @@ def calculate_encoding(file_path, original_file_name_for_coord):
 
 	#Calculate vehicle count in the original video
 	vehicle_count_high_res = compute_vehicle_count(file_path, line_coordinates)
-
-	br  = calculate_bitrate(file_path, line_coordinates, vehicle_count_high_res)
-	fps = calculate_fps(file_path, line_coordinates, vehicle_count_high_res)
-	res = calculate_resolution(file_path, line_coordinates, vehicle_count_high_res)
 	
+	fps = calculate_fps(file_path, line_coordinates, vehicle_count_high_res)
+	br  = calculate_bitrate(file_path, line_coordinates, vehicle_count_high_res)
+	res = calculate_resolution(file_path, line_coordinates, vehicle_count_high_res)
 	return br, fps, res
 
 # calculate_encoding("../streamed_files/nightSouthKorea.mov")

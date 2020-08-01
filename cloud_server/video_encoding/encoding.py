@@ -41,8 +41,8 @@ def set_resolution(input, output, resolution):
 		return False
 def set_bitrate(input, output, bitrate):
 	cmd = "ffmpeg -i " + input + " -b:v " + str(bitrate) + "k -an -y " + output 
-	print(cmd)
 	subprocess.run(cmd, shell=True)
+	print(cmd)
 
 # Learn more about different ways of compressing ###
 # Using H.265 by default

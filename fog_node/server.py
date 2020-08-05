@@ -36,7 +36,7 @@ def server():
             pid = os.fork()
             
             # If it is a client process
-            if  pid== 0:
+            if  pid == 0:
                 
                 serverSocket.close() 
                 

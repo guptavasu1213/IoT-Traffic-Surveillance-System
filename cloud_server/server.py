@@ -1,18 +1,29 @@
-# This is an example from "Computer Networking: A Top Down Approach" textbook chapter 2
-# You can try this with nc localhost 12000
-
 import socket
 import sys
 import os
+import time
 
-def receiveAcknowlegdement(clientSocket, message="OK"):
-    if clientSocket.recv(2048).decode('ascii') != message:
+def receiveAcknowlegdement(socket, message="OK"):
+    '''
+    This function waits to receive a message at the given socket. 
+    If the expected message is not received, then the program terminates.
+    By default, the message is "OK", but can be changed
+    '''
+    if socket.recv(2048).decode('ascii') != message:
+        print("ERROR: Acknowledgement not received")
         exit(1)
         
-def sendAcknowledgment(connectionSocket, message="OK"):
-    connectionSocket.send(message.encode('ascii'))
+def sendAcknowledgment(socket, message="OK"):
+    '''
+    This function sends a message through the passed socket. 
+    By default, the message is "OK", but can be changed
+    '''
+    socket.send(message.encode('ascii'))
 
 def server():
+    '''
+    Initiates the server and listens for the clients to connect
+    '''
     #Server port
     serverPort = 12000
     
@@ -44,51 +55,49 @@ def server():
             
             # If it is a client process
             if  pid == 0:
-                
                 serverSocket.close() 
-
+                
+                #Getting Fog node name
                 fogName = connectionSocket.recv(2048).decode('ascii')
                 print("Fog name is:", fogName)
                 sendAcknowledgment(connectionSocket)
-
+                #Getting the camera name
                 cameraName = connectionSocket.recv(2048).decode('ascii')
                 print("Cam name is:", cameraName)
                 sendAcknowledgment(connectionSocket)
-
-                # #Server receives client message, decode it and convert it to upper case
-                # message = connectionSocket.recv(2048)
-                # response = message.decode('ascii').upper()
                 
                 folderName = "./streamed_files/{}/{}".format(fogName, cameraName)
                 count_files = 0
-                videoTerminationByte = str.encode(" ") #Converting to bytes
+
+                #Byte which denotes the video termination
+                videoTerminationByte = "END".encode('ascii')
 
                 receivedAllVideos = False
                 #Receiving the video file
                 while not receivedAllVideos:
                     fileName = "{}.mp4".format(str(count_files))
+                    videoReceived = bytes() # Video initialization
                     with open(os.path.join(folderName, fileName),'wb') as file: 
-                        while True:               
+                        # Receiving the video until the termination
+                        while True:
                             recvfile = connectionSocket.recv(4096)
+                            videoReceived += recvfile #Appending to the received video 
+
                             # print(recvfile)
-                            if recvfile == videoTerminationByte:
+                            if recvfile.endswith(videoTerminationByte):
+                                videoReceived = videoReceived[:-len(videoTerminationByte)]
                                 count_files += 1
                                 print("FILE RECEIVED")
+                                #Inform client about full video receival
+                                sendAcknowledgment(connectionSocket) 
                                 break
                             elif not recvfile: #When client connection terminates
                                 receivedAllVideos = True
                                 os.remove(os.path.join(folderName, fileName))
                                 break
-                            file.write(recvfile)
-
-                # savefilename = "abcd.mp4"
-                # #Receiving the video file
-                # with connectionSocket,open(savefilename,'wb') as file:
-                #     while True:
-                #         recvfile = connectionSocket.recv(4096)
-                #         if not recvfile: break
-                #         file.write(recvfile)
-                #     print("FILE RECEIVED")
+                        #Writing to a file
+                        if not receivedAllVideos:
+                            file.write(videoReceived)
 
                 #Server sends the client the modified message
                 # print(response)

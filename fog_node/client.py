@@ -1,17 +1,29 @@
-# This is an example from "Computer Networking: A Top Down Approach" textbook chapter 2
 import socket
 import sys
 import os
 import time 
 
-def receiveAcknowlegdement(clientSocket, message="OK"):
-    if clientSocket.recv(2048).decode('ascii') != message:
+def receiveAcknowlegdement(socket, message="OK"):
+    '''
+    This function waits to receive a message at the given socket. 
+    If the expected message is not received, then the program terminates.
+    By default, the message is "OK", but can be changed
+    '''
+    if socket.recv(2048).decode('ascii') != message:
+        print("ERROR: Acknowledgement not received")
         exit(1)
         
-def sendAcknowledgment(connectionSocket, message="OK"):
-    connectionSocket.send(message.encode('ascii'))
+def sendAcknowledgment(socket, message="OK"):
+    '''
+    This function sends a message through the passed socket. 
+    By default, the message is "OK", but can be changed
+    '''
+    socket.send(message.encode('ascii'))
 
 def client(fogNodeName, cameraName):
+    '''
+    Initiates the client and attempts to build a connection with the server
+    '''
     # Server Information
     serverName = '199.116.235.176'
     serverPort = 12000
@@ -35,37 +47,34 @@ def client(fogNodeName, cameraName):
         clientSocket.send(cameraName.encode('ascii'))
         receiveAcknowlegdement(clientSocket)
         
-        count = 0
         folderPath = "./street-cam-videos/" + cameraName
         videoFiles = sorted(os.listdir(folderPath))
-
+        
+        #Byte which denotes the video termination
+        terminationByte = "END".encode('ascii')
+        
         for fileName in videoFiles:   
+            # count = 0
             filePath = os.path.join(folderPath, fileName)
             # filename = "/home/vasu/Documents/street-videos/youtubeDownloads/easy.mp4"
             with open(filePath, 'rb') as file:
-                # sendfile = file.read()
-                
-                # ==== If sending a file in pieces
+                sendfile = file.read()
+                '''
+                ==== If sending a file in pieces
                 while True:
                     count += 1
                     sendfile = file.read(4096)
                     if not sendfile: break
                     # print(count)
-
                     clientSocket.send(sendfile)
-            time.sleep(2)
-            # clientSocket.sendall(sendfile)
-            sendAcknowledgment(clientSocket, " ") # " " denotes video termination
-            # receiveAcknowlegdement(clientSocket)
+                '''
+            #Appending termination byte at the end of the video
+            sendfile += terminationByte
+            clientSocket.sendall(sendfile) #Send the entire video
+            # Waiting for server acknowlegment for the full video receival
+            receiveAcknowlegdement(clientSocket) 
             print("{} : {} -- Video sent".format(cameraName, fileName))
-        #Client send message to the server
-        # response = "OK".encode('ascii')
-        # clientSocket.send(response)
-        
-        # # Client receives a message from the server and print it
-        # message = clientSocket.recv(2048)
-        # print(message.decode('ascii'))
-        
+
         # Client terminate connection with the server
         clientSocket.close()
         

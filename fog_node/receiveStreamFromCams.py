@@ -1,0 +1,1 @@
+#Storing each video segment and storing it in its own folder

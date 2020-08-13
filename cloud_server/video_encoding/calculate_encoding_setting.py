@@ -138,7 +138,7 @@ def calculate_resolution(file_path, line_coordinates, vehicle_count_high_res):
 		new_file_path = "encoded_videos/" + file_name +'-resolutionWidth-'+str(resolutionWidth)+ "." + extension
 
 		#When conversion is unsuccessful        
-		if not set_resolution(file_path, new_file_path, resolutionWidth,):
+		if not set_resolution(file_path, new_file_path, resolutionWidth):
 			# When an issue occurs while retrieving the video codec information, 
 			# it means that the video conversion as not successful with the given resolution
 			resolutionWidth += 1

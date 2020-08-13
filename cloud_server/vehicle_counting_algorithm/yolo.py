@@ -13,10 +13,10 @@ from keras.utils import multi_gpu_model
 list_of_vehicles = ["bicycle","car","motorbike","bus","truck", "train"]
 
 class YOLO(object):
-    def __init__(self):
-        self.model_path = 'model_data/yolo4_weight.h5'
-        self.anchors_path = 'model_data/yolo4_anchors.txt'
-        self.classes_path = 'model_data/coco_classes.txt'
+    def __init__(self, PATH_TO_FOLDER=""):
+        self.model_path = os.path.join(PATH_TO_FOLDER, 'model_data/yolo4_weight.h5')
+        self.anchors_path = os.path.join(PATH_TO_FOLDER,'model_data/yolo4_anchors.txt')
+        self.classes_path = os.path.join(PATH_TO_FOLDER, 'model_data/coco_classes.txt')
         self.gpu_num = 1
         self.score = 0.5
         self.iou = 0.5

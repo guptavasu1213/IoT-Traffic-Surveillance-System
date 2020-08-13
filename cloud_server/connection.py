@@ -1,7 +1,12 @@
-from listenToStreamedFiles import *
+# from listenToStreamedFiles import *
+
+import os
+import signal
+import subprocess
 
 #Handler flags
 listening = False
+receiveMoreVideos = False
 
 def listeningProcessReady(signum, stack):
 	'''
@@ -9,6 +14,13 @@ def listeningProcessReady(signum, stack):
 	'''
 	global listening
 	listening = True
+
+def listeningProcessReceivedVideo(signum, stack):
+	'''
+	Signal handler to specify that the child process has received the video
+	'''
+	global receiveMoreVideos
+	receiveMoreVideos = True
 
 def receiveAcknowlegdement(socket, message="OK"):
 	'''
@@ -31,7 +43,7 @@ def sendAcknowledgment(socket, message="OK"):
 	'''
 	socket.send(message.encode('ascii'))
 
-
+import time
 def receiveFiles(connectionSocket, folderName, listeningProcessPid):
 	'''
 	The function receives video files from the given socket and saves those videos in
@@ -40,6 +52,11 @@ def receiveFiles(connectionSocket, folderName, listeningProcessPid):
 	:param folderName: Folder name in which the videos have to be stored upon receival
 	:param listeningProcessPid: The process id of the process listening to the video receiving
 	'''
+	#Setup handler
+	signal.signal(signal.SIGUSR1, listeningProcessReceivedVideo)
+
+	global receiveMoreVideos
+
 	count_files = 0  # Num of files received
 	# Byte which denotes the video termination
 	videoTerminationByte = "END".encode('ascii')
@@ -60,7 +77,6 @@ def receiveFiles(connectionSocket, folderName, listeningProcessPid):
 					videoReceived = videoReceived[:-len(videoTerminationByte)]
 					count_files += 1
 					print("FILE RECEIVED")
-					os.kill(listeningProcessPid, signal.SIGUSR1)
 					# Inform client about full video receival
 					sendAcknowledgment(connectionSocket)
 					break
@@ -71,6 +87,19 @@ def receiveFiles(connectionSocket, folderName, listeningProcessPid):
 			# Writing to a file
 			if not receivedAllVideos:
 				file.write(videoReceived)
+				# print("FWRITE", '-'*15)
+				os.kill(listeningProcessPid, signal.SIGUSR1)
+
+				#Wait for the listening process to receive the video
+				while True:
+					# print("=========BEFORRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
+					signal.pause()
+					# print("=========AFTRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
+					if receiveMoreVideos:
+						receiveMoreVideos = False
+						break
+				# time.sleep(2)
+
 	# Terminate the listening process
 	os.kill(listeningProcessPid, signal.SIGINT)
 
@@ -94,15 +123,17 @@ def clientProcessFunctionality(connectionSocket):
 	print("Cam name is:", cameraName)
 	sendAcknowledgment(connectionSocket)
 
-	folderName = "./streamed_files/{}/{}".format(fogName, cameraName)
+	folderPath = "./streamed_files/{}/{}".format(fogName, cameraName)
 
-	pid = os.fork()
-	if pid == -1: #Fork failed
-		exit(1)
-	# Initiating a process for checking the files in the given folder
-	elif pid == 0:
-		listenToReceivedFiles(folderName)
-		return
+	process = subprocess.Popen(["python3", "./vehicle_counting_algorithm/listenToStreamedFiles.py", "-fp", folderPath])
+
+	# pid = os.fork()
+	# if pid == -1: #Fork failed
+	# 	exit(1)
+	# # Initiating a process for checking the files in the given folder
+	# elif pid == 0:
+	# 	listenToReceivedFiles(folderName)
+	# 	return
 
 	# Waiting until the listening process is ready
 	while True:
@@ -111,7 +142,7 @@ def clientProcessFunctionality(connectionSocket):
 			break
 
 	# Receive files from the socket and store them
-	receiveFiles(connectionSocket, folderName, pid)
+	receiveFiles(connectionSocket, folderPath, process.pid)
 
 	print("Closing socket")
 	connectionSocket.close()

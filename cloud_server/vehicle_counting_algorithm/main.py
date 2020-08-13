@@ -1,6 +1,3 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-
 from __future__ import division, print_function, absolute_import
 import argparse
 
@@ -8,6 +5,8 @@ ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--input",help="path to input video", required=True)
 ap.add_argument("-lc", "--lineCoordinates",help="line coordinates (separated by ';' for multiple lines);\
 				\"x1,y1,x2,y2; x1,y1,x2,y2\"", required=True)
+ap.add_argument("-fp", "--folderPath", help="Path to the detection algorithm folder. Only pass this flag if running "
+											"this file outside the folder", required=False, default="")
 ap.add_argument("-r", "--resolutionRatio",help="only pass if trying different resolutions: \
 	video resolution ratio = current resolution/original resolution; Pass 'WidthRatioxHeightRatio'", required=False, default='1x1')
 ap.add_argument("-cf", "--CountFilePath",help="count file path", required=False, default="count_log/")
@@ -61,6 +60,9 @@ np.random.seed(100)
 COLORS = np.random.randint(0, 255, size=(200, 3),
 	dtype="uint8")
 
+#Path to the vehicle counting algorithm folder
+PATH_TO_FOLDER = args["folderPath"]
+
 def main(yolo):
 
 	start = time.time()
@@ -70,7 +72,7 @@ def main(yolo):
 
 	counter = []
 	#deep_sort
-	model_filename = 'model_data/market1501.pb'
+	model_filename = os.path.join(PATH_TO_FOLDER, 'model_data/market1501.pb')
 	encoder = gdet.create_box_encoder(model_filename,batch_size=1)
 
 	metric = nn_matching.NearestNeighborDistanceMetric("cosine", max_cosine_distance, nn_budget)
@@ -228,4 +230,4 @@ def main(yolo):
 	cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-	main(YOLO())
+	main(YOLO(PATH_TO_FOLDER))

@@ -80,7 +80,7 @@ def main(yolo):
 
 
 	print("========>", args["input"])
-	writeVideo_flag = False
+	writeVideo_flag = True
 	video_capture = cv2.VideoCapture(args["input"])
 	fps = video_capture.get(cv2.CAP_PROP_FPS)
 
@@ -195,7 +195,7 @@ def main(yolo):
 		if writeVideo_flag:
 			# save a frame
 			out.write(frame)
-			frame_index = frame_index + input_filepath
+			# frame_index = frame_index + input_filepath
 
 
 		fps  = ( fps + (1./(time.time()-t1)) ) / 2

@@ -13,25 +13,42 @@ def get_line_result(x, y, m, b):
 	# mx - y + b = 0 in the form Ax + By +c = 0
 	return (m*x) - y + b 
 
-def format_coordinates(lines, resolutionRatio):
+# def format_coordinates(lines, resolutionRatio):
+# 	'''
+# 	Scales the line(s) coordinates according to the size of the input video resolution
+# 	'''
+# 	resolutionRatio = [float(val) for val in resolutionRatio.strip().split('x')]
+#
+# 	line_coord = []
+# 	for val in lines.split(";"):
+# 		line_coord.append([])
+# 		points = val.strip().split(',')
+# 		for i in range(2):
+# 			p = (int(points[i*2].strip()), int(points[(i*2)+1].strip()))
+# 			p = (int(p[0]*resolutionRatio[0]), int(p[1]*resolutionRatio[1]))
+# 			line_coord[-1].append(p)
+# 	return line_coord
+
+def format_coordinates(lines, currentResolution):
 	'''
 	Scales the line(s) coordinates according to the size of the input video resolution
+	:param lines: String containing the coordinates of the line(s)
+	:param currentResolution: List which contains the width and height of the current resolution
 	'''
-	resolutionRatio = [float(val) for val in resolutionRatio.strip().split('x')]
-
 	line_coord = []
 	for val in lines.split(";"):
 		line_coord.append([])
 		points = val.strip().split(',')
 		for i in range(2):
 			p = (int(points[i*2].strip()), int(points[(i*2)+1].strip()))
-			p = (int(p[0]*resolutionRatio[0]), int(p[1]*resolutionRatio[1]))
+			print(p, currentResolution)
+			p = (round(p[0]*currentResolution[0]/100), round(p[1]*currentResolution[1]/100))
 			line_coord[-1].append(p)
 	return line_coord
 
 class Counter():
-	def __init__(self, lines, resolutionRatio):
-		lines = format_coordinates(lines, resolutionRatio)
+	def __init__(self, lines, currentResolution):
+		lines = format_coordinates(lines, currentResolution)
 		self.trackedID = set()
 		self.lines = []
 		self.slopesAndIntercepts = [] #Stores slopes and intercepts for all lines

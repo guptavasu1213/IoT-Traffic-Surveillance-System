@@ -62,14 +62,21 @@ encoder = gdet.create_box_encoder(model_filename, batch_size=1)
 metric = nn_matching.NearestNeighborDistanceMetric("cosine", max_cosine_distance, nn_budget)
 tracker = Tracker(metric)
 
-count_file_path = ""
 
-vehicle_count = 0
-# Line intersection counter
-line_counter = Counter('0,1000,1500,1000', "1x1") #############CHANGE COORD
+vehicle_count = None
+line_counter = None
+count_file_path = None
 
 yolo = YOLO(PATH_TO_FOLDER)
 
+def initialize_vars(coordinates, path, currentResolution):
+    '''
+
+    '''
+    global line_counter, count_file_path, vehicle_count
+    vehicle_count = 0
+    line_counter = Counter(coordinates, currentResolution)
+    count_file_path = path
 def write_count():
     global vehicle_count
     # Writing to a log file
@@ -166,7 +173,6 @@ def main(video_file_path):
                     continue
                 thickness = int(np.sqrt(64 / float(j + 1)) * 2)
                 cv2.line(frame, (pts[track.track_id][j - 1]), (pts[track.track_id][j]), (color), thickness)
-            # cv2.putText(frame, str(class_names[j]),(int(bbox[0]), int(bbox[1] -20)),0, 5e-3 * 150, (255,255,255),2)
 
         count = len(set(counter))
         cv2.putText(frame, "Total Line Counter: " + str(vehicle_count), (int(20), int(120)), 0, 5e-3 * 200, (0, 255, 0),

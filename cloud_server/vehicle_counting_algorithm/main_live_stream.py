@@ -80,8 +80,8 @@ def initialize_vars(coordinates, path, currentResolution):
 def write_count():
     global vehicle_count
     # Writing to a log file
-    with open(count_file_path, 'a') as file:###########CHANGE COUNT FILE PATH
-        file.write(str(vehicle_count))
+    with open(count_file_path, 'a') as file:
+        file.write(str(vehicle_count)+"\n")
     vehicle_count = 0 #Reset count
 
 import time

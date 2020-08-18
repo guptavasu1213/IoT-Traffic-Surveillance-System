@@ -74,12 +74,19 @@ def getFogAndCameraName(folderPath):
 
 def getLineCoordinatesFileName():
 	'''
-	
+
 	'''
 	lastSlashIndex = folderPath.rfind("/")
 	if lastSlashIndex == len(folderPath)-1:
 		lastSlashIndex = folderPath[:-1].rfind("/")
 	return folderPath[:lastSlashIndex+1] + "line_coordinates.txt"
+
+def getCountLogFileName(cameraName, fogNodeName):
+	'''
+
+	'''
+	index = folderPath.find("streamed_files")
+	return os.path.join(folderPath[:index], "detection_logs", fogNodeName, cameraName, "log.txt")
 
 def getLineCoordinatesForCamera(cameraName, fogNodeName):
 	'''
@@ -141,10 +148,10 @@ def main_listen():
 
 	folderPath = os.path.abspath(folderPath)
 	cameraName, fogNodeName = getFogAndCameraName(folderPath)
-	count_file_path = ""
+	count_file_path = getCountLogFileName(cameraName, fogNodeName)
 	line_coordinates = getLineCoordinatesForCamera(cameraName, fogNodeName)
 
-	# Setup handlers
+	# Setup signal handlers
 	signal.signal(signal.SIGUSR1, processVideos)
 	signal.signal(signal.SIGINT, terminateProcess)
 
@@ -176,6 +183,7 @@ def main_listen():
 			#Removing file after analysis
 			os.remove(videoAbsPath)
 			numVideosToAnalyze -= 1
+			write_count()
 
 		if terminate:
 			print("Terminating video now", "=" * 8)

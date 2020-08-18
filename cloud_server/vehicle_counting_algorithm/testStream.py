@@ -1,3 +1,10 @@
+'''
+#######################
+This is an extra file
+#######################
+'''
+
+
 import os
 folderPath = "/home/ubuntu/ave/adaptive-video-encoding/cloud_server/streamed_files/fog1/cam2"
 

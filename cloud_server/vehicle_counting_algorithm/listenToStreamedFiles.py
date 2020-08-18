@@ -9,7 +9,7 @@ ap.add_argument("-fp", "--folderPath", help="folder path of streamed camera vide
 args = vars(ap.parse_args())
 
 # Error check the folder path
-folderPath = args["folderPath"]
+folderPath = args["folderPath"].strip()
 if not os.path.isdir(folderPath):
 	print("ERROR: The specified folder path is invalid")
 	exit(1)
@@ -17,7 +17,6 @@ if not os.path.isdir(folderPath):
 import signal
 
 from main_live_stream import *
-
 
 reinitialize = True
 
@@ -73,14 +72,22 @@ def getFogAndCameraName(folderPath):
 	else:
 		return splittedPath[-1], splittedPath[-2]
 
+def getLineCoordinatesFileName():
+	'''
+	
+	'''
+	lastSlashIndex = folderPath.rfind("/")
+	if lastSlashIndex == len(folderPath)-1:
+		lastSlashIndex = folderPath[:-1].rfind("/")
+	return folderPath[:lastSlashIndex+1] + "line_coordinates.txt"
+
 def getLineCoordinatesForCamera(cameraName, fogNodeName):
 	'''
 	Extracts the line(s) coordinates for the given fog node and the camera
 	fileName: The file name of the video
 	'''
-	line_coordinates_filepath = "../streamed_files/{}/line_coordinates.txt".format(fogNodeName)
 	#Open line coordinates file
-	with open(line_coordinates_filepath) as file:
+	with open(getLineCoordinatesFileName()) as file:
 		coordinatesFile = file.read()
 
 	cameraIndex = coordinatesFile.find(cameraName)

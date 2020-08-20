@@ -4,9 +4,10 @@ import os
 import signal
 import subprocess
 
-#Handler flags
+# Handler flags
 listening = False
 receiveMoreVideos = False
+sendEncodingParams = False
 
 def listeningProcessReady(signum, stack):
 	'''
@@ -21,6 +22,13 @@ def listeningProcessReceivedVideo(signum, stack):
 	'''
 	global receiveMoreVideos
 	receiveMoreVideos = True
+
+def receiveEncodingParams(signum, stack):
+	'''
+
+	'''
+	global sendEncodingParams
+	sendEncodingParams = True
 
 def receiveAcknowlegdement(socket, message="OK"):
 	'''
@@ -43,23 +51,30 @@ def sendAcknowledgment(socket, message="OK"):
 	'''
 	socket.send(message.encode('ascii'))
 
-import time
 def receiveFiles(connectionSocket, folderName, listeningProcessPid):
 	'''
 	The function receives video files from the given socket and saves those videos in
 	the given folder name.
-	:param connectionSocket: Socket with which the connection has already been estabilished
+	:param connectionSocket: Socket with which the connection has already been established
 	:param folderName: Folder name in which the videos have to be stored upon receival
 	:param listeningProcessPid: The process id of the process listening to the video receiving
 	'''
 	#Setup handler
 	signal.signal(signal.SIGUSR1, listeningProcessReceivedVideo)
+	signal.signal(signal.SIGABRT, receiveEncodingParams)
 
-	global receiveMoreVideos
+	global receiveMoreVideos, sendEncodingParams
 
 	count_files = 0  # Num of files received
+
+	# Byte which denotes the calculation of encoding parameters
+	encodingCalculationByte = "CALC".encode('ascii')
+
 	# Byte which denotes the video termination
 	videoTerminationByte = "END".encode('ascii')
+
+	# A flag to denote that the server has to compute the encoding params
+	calculateEncodingParams = False
 
 	receivedAllVideos = False
 	# Receiving the video file
@@ -72,13 +87,23 @@ def receiveFiles(connectionSocket, folderName, listeningProcessPid):
 				recvfile = connectionSocket.recv(4096)
 				videoReceived += recvfile  # Appending to the received video
 
+				if recvfile.startswith(encodingCalculationByte):
+					videoReceived = videoReceived[len(encodingCalculationByte):]
+					calculateEncodingParams = True
+					print("ENCODING CALCULATION REQUEST RECEIVED")
+
 				# print(recvfile)
 				if recvfile.endswith(videoTerminationByte):
 					videoReceived = videoReceived[:-len(videoTerminationByte)]
 					count_files += 1
 					print("FILE RECEIVED")
-					# Inform client about full video receival
-					sendAcknowledgment(connectionSocket)
+					if sendEncodingParams:
+						parameters = "Parameters: Bitrate-100; FPS-10"
+						print("NICE"*10)
+						sendAcknowledgment(connectionSocket, parameters)
+						sendEncodingParams = False
+					else:
+						sendAcknowledgment(connectionSocket)
 					break
 				elif not recvfile:  # When client connection terminates
 					receivedAllVideos = True
@@ -92,13 +117,17 @@ def receiveFiles(connectionSocket, folderName, listeningProcessPid):
 
 				#Wait for the listening process to receive the video
 				while True:
-					# print("=========BEFORRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
+					# print("========= BEFORRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
 					signal.pause()
-					# print("=========AFTRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
+					# print("========= AFTRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
 					if receiveMoreVideos:
 						receiveMoreVideos = False
 						break
-				# time.sleep(2)
+				if calculateEncodingParams:
+					# Send a signal
+					os.kill(listeningProcessPid, signal.SIGUSR2)
+					calculateEncodingParams = False
+
 
 	# Terminate the listening process
 	os.kill(listeningProcessPid, signal.SIGINT)
@@ -111,7 +140,6 @@ def clientProcessFunctionality(connectionSocket):
 	- Receive the files from the client
 	:param connectionSocket: Socket with which the connection has already been estabilished
 	'''
-	#Setup handler
 	signal.signal(signal.SIGUSR2, listeningProcessReady)
 
 	# Getting Fog node name

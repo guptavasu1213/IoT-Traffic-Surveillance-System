@@ -3,13 +3,18 @@ import sys
 import os
 import time
 
-def receiveAcknowlegdement(socket, message="OK"):
+def receiveAcknowlegdement(socket, message="OK", expectEncodingParams=False):
 	'''
 	This function waits to receive a message at the given socket.
 	If the expected message is not received, then the program terminates.
 	By default, the message is "OK", but can be changed
 	'''
-	if socket.recv(2048).decode('ascii') != message:
+	socket_message = socket.recv(2048).decode('ascii')
+	if expectEncodingParams:
+		if socket_message.startswith("Parameters:"):
+			print(socket_message)
+			return
+	if socket_message != message:
 		print("ERROR: Acknowledgement not received")
 		exit(1)
 
@@ -63,15 +68,28 @@ def client(fogNodeName, cameraName):
 		folderPath = "./street-cam-videos/" + cameraName
 		videoFiles = sortFiles(os.listdir(folderPath))
 
+		# Byte which denotes the calculation of encoding parameters
+		encodingCalculationByte = "CALC".encode('ascii')
+
 		#Byte which denotes the video termination
 		terminationByte = "END".encode('ascii')
 
+		startEncodingCalculationTime = 0
+		maxEncodingCalculationTime = 5 #The time interval at which the
+		videoLen = 1 # Length of each video in secs
+
 		for fileName in videoFiles:
+			time.sleep(videoLen)
+			if startEncodingCalculationTime % maxEncodingCalculationTime == 0:
+				sendFile = encodingCalculationByte
+			else:
+				sendFile = bytes()
+
 			# count = 0
 			filePath = os.path.join(folderPath, fileName)
 			# filename = "/home/vasu/Documents/street-videos/youtubeDownloads/easy.mp4"
 			with open(filePath, 'rb') as file:
-				sendfile = file.read()
+				sendFile += file.read()
 				'''
 				==== If sending a file in pieces
 				while True:
@@ -82,17 +100,18 @@ def client(fogNodeName, cameraName):
 					clientSocket.send(sendfile)
 				'''
 			#Appending termination byte at the end of the video
-			sendfile += terminationByte
-			clientSocket.sendall(sendfile) #Send the entire video
-			# Waiting for server acknowlegment for the full video receival
-			receiveAcknowlegdement(clientSocket)
+			sendFile += terminationByte
+			clientSocket.sendall(sendFile) #Send the entire video
+			# Waiting for server acknowledgment for the full video receival
+			receiveAcknowlegdement(clientSocket, expectEncodingParams=True)
 			print("{} : {} -- Video sent".format(cameraName, fileName))
 
+			startEncodingCalculationTime += videoLen
 		# Client terminate connection with the server
 		clientSocket.close()
 
 	except socket.error as e:
-		print('An error occured:',e)
+		print('An error occurred:',e)
 		clientSocket.close()
 		sys.exit(1)
 

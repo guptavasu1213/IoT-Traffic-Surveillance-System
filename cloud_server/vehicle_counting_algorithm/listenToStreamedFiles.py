@@ -16,35 +16,39 @@ if not os.path.isdir(folderPath):
 
 import signal
 
-from main_live_stream import *
-
-reinitialize = True
+# from main_live_stream import *
 
 # Flags for handlers
-numVideosToAnalyze = 0
+numVideosReceived = 0
 terminate = False
 ppid = 0
+videoNumToStartEncoding = None
 
 def processVideos(signum, stack):
 	'''
 	Signal handler for receiving a signal to process video files
 	'''
-	global numVideosToAnalyze
-	numVideosToAnalyze += 1
+	global numVideosReceived
+	numVideosReceived += 1
 	# print('YAYYYYYY:', numVideosToAnalyze)
 	os.kill(ppid, signal.SIGUSR1)
+
+def calculateEncodingParams(signum, stack):
+	global videoNumToStartEncoding
+	videoNumToStartEncoding = numVideosReceived
 
 def terminateProcess(signum, stack):
 	'''
 	Signal handler for termination of the current process
 	'''
 	# If video analysis is ongoing, then set the terminate flag to True
-	if numVideosToAnalyze > 0:
+	if numVideosReceived > 0:
 		global terminate
 		terminate = True
 	else:  # Terminating when there is no ongoing video analysis
 		# print("QUITTING")
 		exit(0)
+
 
 # def getFogAndCameraName(videoFilePath):
 # 	'''
@@ -136,15 +140,15 @@ def get_video_resolution(videoPath):
 		if line.startswith('Stream #0:0'):
 			resolution = re.search('([1-9]\d+x\d+)', line).group(1)
 			return [int(val) for val in resolution.strip().split('x')]
-
+import time
 def main_listen():
 	'''
 	To listen to the folder with received files, this process communicates with the parent
 	process and receives signal from it whenever
     '''
-	global ppid, folderPath, numVideosToAnalyze, reinitialize
+	global ppid, folderPath, numVideosReceived, videoNumToStartEncoding
 	ppid = os.getppid()
-
+	numVideosAnalyzed = 0
 
 	folderPath = os.path.abspath(folderPath)
 	cameraName, fogNodeName = getFogAndCameraName(folderPath)
@@ -153,6 +157,7 @@ def main_listen():
 
 	# Setup signal handlers
 	signal.signal(signal.SIGUSR1, processVideos)
+	signal.signal(signal.SIGUSR2, calculateEncodingParams)
 	signal.signal(signal.SIGINT, terminateProcess)
 
 	print('My PID is:', os.getpid())
@@ -163,9 +168,8 @@ def main_listen():
 	while True:
 		print("SLEEP----------------------")
 		signal.pause()
-		print("WOKEUP---------------------", numVideosToAnalyze)
-		while numVideosToAnalyze > 0:
-			# print("VIDEOS TO ANA:", numVideosToAnalyze)
+		print("WOKEUP---------------------", numVideosReceived)
+		while numVideosAnalyzed < numVideosReceived:
 			videoFiles = os.listdir(folderPath)
 			sortedFiles = sortFiles(videoFiles)
 			videoFile = sortedFiles[0]
@@ -173,18 +177,22 @@ def main_listen():
 			videoAbsPath = os.path.abspath(os.path.join(folderPath, videoFile))
 			print("ABS:", videoAbsPath)
 
-			if reinitialize == True:
+			if  numVideosAnalyzed+1 == videoNumToStartEncoding:
+				print("CALCULATE ENCODING NOW with", videoFile, "========")
 				resolution = get_video_resolution(videoAbsPath)
-				initialize_vars(line_coordinates, count_file_path, resolution)
-				reinitialize = False
+				# os.kill(ppid, signal.SIGABRT)
+				videoNumToStartEncoding = None
+				time.sleep(4)
+				# initialize_vars(line_coordinates, count_file_path, resolution)
 
-			main(videoAbsPath)
+			time.sleep(1)
+			# main(videoAbsPath)
 
 			#Removing file after analysis
 			os.remove(videoAbsPath)
-			numVideosToAnalyze -= 1
-			write_count()
+			numVideosAnalyzed += 1
 
+		# numVideosAnalyzed, numVideosReceived = 0, 0 #Reset variables
 		if terminate:
 			print("Terminating video now", "=" * 8)
 			exit(0)

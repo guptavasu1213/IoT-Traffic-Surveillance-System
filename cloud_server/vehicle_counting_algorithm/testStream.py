@@ -25,10 +25,10 @@ def getFogAndCameraName(videoFilePath):
 	else:
 		return splittedPath[-2], splittedPath[-3]
 
-numVideosToAnalyze = 4
-while numVideosToAnalyze > 0:
+numVideosReceived = 4
+while numVideosReceived > 0:
     videoFiles = os.listdir(folderPath)
-    videoFile = sorted(videoFiles)[4-numVideosToAnalyze]
+    videoFile = sorted(videoFiles)[4 - numVideosReceived]
     print("Analyzing file: ", videoFile)
     videoAbsPath = os.path.abspath(os.path.join(folderPath, videoFile))
     print("ABS:", videoAbsPath)
@@ -38,4 +38,4 @@ while numVideosToAnalyze > 0:
     # countVideo(videoAbsPath, fogNodeName, cameraName)
     # Removing file after analysis
     # os.remove(videoAbsPath)
-    numVideosToAnalyze -= 1
+    numVideosReceived -= 1

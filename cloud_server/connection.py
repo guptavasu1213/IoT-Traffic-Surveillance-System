@@ -117,17 +117,18 @@ def receiveFiles(connectionSocket, folderName, listeningProcessPid):
 
 				#Wait for the listening process to receive the video
 				while True:
-					# print("========= BEFORRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
-					signal.pause()
-					# print("========= AFTRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
 					if receiveMoreVideos:
 						receiveMoreVideos = False
 						break
+					else:
+						# print("========= BEFORRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
+						signal.pause()
+						print("========= AFTRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
+
 				if calculateEncodingParams:
 					# Send a signal
 					os.kill(listeningProcessPid, signal.SIGUSR2)
 					calculateEncodingParams = False
-
 
 	# Terminate the listening process
 	os.kill(listeningProcessPid, signal.SIGINT)
@@ -154,14 +155,6 @@ def clientProcessFunctionality(connectionSocket):
 	folderPath = "./streamed_files/{}/{}".format(fogName, cameraName)
 
 	process = subprocess.Popen(["python3", "./vehicle_counting_algorithm/listenToStreamedFiles.py", "-fp", folderPath])
-
-	# pid = os.fork()
-	# if pid == -1: #Fork failed
-	# 	exit(1)
-	# # Initiating a process for checking the files in the given folder
-	# elif pid == 0:
-	# 	listenToReceivedFiles(folderName)
-	# 	return
 
 	# Waiting until the listening process is ready
 	while True:

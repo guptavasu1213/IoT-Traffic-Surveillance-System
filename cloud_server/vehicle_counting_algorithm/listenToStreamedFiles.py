@@ -160,29 +160,35 @@ def main_listen():
 	signal.signal(signal.SIGUSR2, calculateEncodingParams)
 	signal.signal(signal.SIGINT, terminateProcess)
 
-	print('My PID is:', os.getpid())
+	print('*****************My PID is:', os.getpid(), "PPID is:", ppid, "*****************")
+
+	sortedFiles = []
 
 	#Send a ready signal to the parent process
 	os.kill(ppid, signal.SIGUSR2)
 	print("===================================================READY SENT")
 	while True:
-		print("SLEEP----------------------")
+		# print("SLEEP----------------------")
 		signal.pause()
 		print("WOKEUP---------------------", numVideosReceived)
 		while numVideosAnalyzed < numVideosReceived:
-			videoFiles = os.listdir(folderPath)
-			sortedFiles = sortFiles(videoFiles)
-			videoFile = sortedFiles[0]
+			if sortedFiles == []:
+				videoFiles = os.listdir(folderPath)
+				sortedFiles = sortFiles(videoFiles)
+
+			videoFile = sortedFiles.pop(0) #Retreive the next file to analyze
 			print("Analyzing file: ", videoFile)
 			videoAbsPath = os.path.abspath(os.path.join(folderPath, videoFile))
-			print("ABS:", videoAbsPath)
+			# print("ABS:", videoAbsPath)
 
 			if  numVideosAnalyzed+1 == videoNumToStartEncoding:
 				print("CALCULATE ENCODING NOW with", videoFile, "========")
 				resolution = get_video_resolution(videoAbsPath)
-				# os.kill(ppid, signal.SIGABRT)
+				os.kill(ppid, signal.SIGABRT)
 				videoNumToStartEncoding = None
-				time.sleep(4)
+				st = time.time()
+				while time.time() - st < 4: #Goes through the loop for the specified time
+					continue
 				# initialize_vars(line_coordinates, count_file_path, resolution)
 
 			time.sleep(1)

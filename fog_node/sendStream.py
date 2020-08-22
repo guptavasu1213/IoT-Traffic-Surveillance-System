@@ -3,7 +3,7 @@ import os
 import argparse
 #Get the camera name from command line
 
-cam_name = "cam3"
+cam_name = "cam2"
 fog_node_name = "fog1"
 
 #Error check for the existence of camera folder

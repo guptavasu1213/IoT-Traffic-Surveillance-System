@@ -2,6 +2,7 @@ import socket
 import sys
 import os
 import time
+from encoding import encode_video
 
 def receiveAcknowlegdement(socket, message="OK", expectEncodingParams=False):
 	'''
@@ -12,8 +13,7 @@ def receiveAcknowlegdement(socket, message="OK", expectEncodingParams=False):
 	socket_message = socket.recv(2048).decode('ascii')
 	if expectEncodingParams:
 		if socket_message.startswith("Parameters:"):
-			print(socket_message)
-			return
+			return socket_message
 	if socket_message != message:
 		print("ERROR: Acknowledgement not received")
 		exit(1)
@@ -75,18 +75,30 @@ def client(fogNodeName, cameraName):
 		terminationByte = "END".encode('ascii')
 
 		startEncodingCalculationTime = 0
-		maxEncodingCalculationTime = 5 #The time interval at which the
+		maxEncodingCalculationTime = 10 #The time interval at which the
 		videoLen = 1 # Length of each video in secs
 
+		encoding_params = None
+
 		for fileName in videoFiles:
-			time.sleep(videoLen)
+			time.sleep(videoLen+5) #To simulate the recording in real-time
+
+			filePath = os.path.join(folderPath, fileName)
+
+			#Checking if the high resolution video for encoding should be sent or not
 			if startEncodingCalculationTime % maxEncodingCalculationTime == 0:
 				sendFile = encodingCalculationByte
+				encoding_params = None #Seng high quality video now
+				print("Send high res")
 			else:
 				sendFile = bytes()
 
+			if encoding_params is not None:
+				#######CHANGE THE FILE PATH THING
+				print("ENCODING:", fileName)
+				filePath = encode_video(filePath, encoding_params, fogNodeName, cameraName)
+
 			# count = 0
-			filePath = os.path.join(folderPath, fileName)
 			# filename = "/home/vasu/Documents/street-videos/youtubeDownloads/easy.mp4"
 			with open(filePath, 'rb') as file:
 				sendFile += file.read()
@@ -103,7 +115,10 @@ def client(fogNodeName, cameraName):
 			sendFile += terminationByte
 			clientSocket.sendall(sendFile) #Send the entire video
 			# Waiting for server acknowledgment for the full video receival
-			receiveAcknowlegdement(clientSocket, expectEncodingParams=True)
+			response = receiveAcknowlegdement(clientSocket, expectEncodingParams=True)
+			if response is not None: # When encoding params are received
+				print("GOT PARAMS", response)
+				encoding_params = response
 			print("{} : {} -- Video sent".format(cameraName, fileName))
 
 			startEncodingCalculationTime += videoLen

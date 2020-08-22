@@ -51,7 +51,12 @@ def sendAcknowledgment(socket, message="OK"):
 	'''
 	socket.send(message.encode('ascii'))
 
-def receiveFiles(connectionSocket, folderName, listeningProcessPid):
+def getEncodingParameters(fogName, cameraName):
+	with open("./encoding_videos/{}/{}/params.txt".format(fogName, cameraName), "r") as file:
+		content = file.read().strip()
+	return content
+	# return "Parameters: Bitrate-100; FPS-10"
+def receiveFiles(connectionSocket, folderName, listeningProcessPid, fogName, cameraName):
 	'''
 	The function receives video files from the given socket and saves those videos in
 	the given folder name.
@@ -98,7 +103,7 @@ def receiveFiles(connectionSocket, folderName, listeningProcessPid):
 					count_files += 1
 					print("FILE RECEIVED")
 					if sendEncodingParams:
-						parameters = "Parameters: Bitrate-100; FPS-10"
+						parameters = getEncodingParameters(fogName, cameraName)
 						print("NICE"*10)
 						sendAcknowledgment(connectionSocket, parameters)
 						sendEncodingParams = False
@@ -163,7 +168,7 @@ def clientProcessFunctionality(connectionSocket):
 			break
 
 	# Receive files from the socket and store them
-	receiveFiles(connectionSocket, folderPath, process.pid)
+	receiveFiles(connectionSocket, folderPath, process.pid, fogName, cameraName)
 
 	print("Closing socket")
 	connectionSocket.close()

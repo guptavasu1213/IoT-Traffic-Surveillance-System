@@ -24,8 +24,8 @@ def sortFiles(fileList):
 
 def grid_search(video_path, high_resolution_count):
 	#CALC THE ENCODING PARAMS BASED ON THE THRESHOLD AND THE EXISTING COUNT
-	bitrate, fps = 100, 7
-	dummySleep(4)
+	bitrate, fps = 500, 9
+	# dummySleep(4)
 	return bitrate, fps
 
 def save_parameters(filepath, bitrate, fps):
@@ -49,7 +49,7 @@ def calculate_encoding_params(path_to_folder, high_resolution_count):
 		f.write(str_to_write)
 
 	#Concatenating all files into one
-	os.system("ffmpeg -f concat -safe 0 -i {} -c copy {} -y".format(temp_file_path, concat_output_file_path))
+	os.system("ffmpeg -f concat -safe 0 -i {} -c copy {} -y 2>/dev/null".format(temp_file_path, concat_output_file_path))
 
 	#Grid search the optimal parameters
 	bitrate, fps = grid_search(concat_output_file_path, high_resolution_count)

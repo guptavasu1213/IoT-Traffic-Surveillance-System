@@ -16,13 +16,18 @@ if not os.path.isdir(folderPath):
 
 import signal
 
-# from main_live_stream import *
+from main_live_stream import *
+from calculate_encoding import calculate_encoding_params
 
 # Flags for handlers
 numVideosReceived = 0
 terminate = False
 ppid = 0
 videoNumToStartEncoding = None
+
+VIDEO_LENGTH = 1 #SEC
+ENCODING_COMPUTATION_TIME = 3 #SEC
+NUM_VIDEOS_FOR_ENCODING = round(ENCODING_COMPUTATION_TIME/VIDEO_LENGTH)
 
 def processVideos(signum, stack):
 	'''
@@ -33,7 +38,7 @@ def processVideos(signum, stack):
 	# print('YAYYYYYY:', numVideosToAnalyze)
 	os.kill(ppid, signal.SIGUSR1)
 
-def calculateEncodingParams(signum, stack):
+def signalEncodeParams(signum, stack):
 	global videoNumToStartEncoding
 	videoNumToStartEncoding = numVideosReceived
 
@@ -48,20 +53,6 @@ def terminateProcess(signum, stack):
 	else:  # Terminating when there is no ongoing video analysis
 		# print("QUITTING")
 		exit(0)
-
-
-# def getFogAndCameraName(videoFilePath):
-# 	'''
-# 	Extracting the fog node name and the camera name from the file path
-# 	:param videoFilePath: Path to the video file
-# 	:return: Camera name, Fog Node name
-# 	'''
-# 	videoFilePath += "/"
-# 	splittedPath = videoFilePath.split("/")
-# 	if splittedPath[-1] == "":
-# 		return splittedPath[-3], splittedPath[-4]
-# 	else:
-# 		return splittedPath[-2], splittedPath[-3]
 
 def getFogAndCameraName(folderPath):
 	'''
@@ -85,12 +76,16 @@ def getLineCoordinatesFileName():
 		lastSlashIndex = folderPath[:-1].rfind("/")
 	return folderPath[:lastSlashIndex+1] + "line_coordinates.txt"
 
-def getCountLogFileName(cameraName, fogNodeName):
+def getCountLogFilePath(cameraName, fogNodeName):
 	'''
 
 	'''
 	index = folderPath.find("streamed_files")
 	return os.path.join(folderPath[:index], "detection_logs", fogNodeName, cameraName, "log.txt")
+
+def getEncodedVideoFolderPath(cameraName, fogNodeName):
+	index = folderPath.find("streamed_files")
+	return os.path.join(folderPath[:index], "encoding_videos", fogNodeName, cameraName)
 
 def getLineCoordinatesForCamera(cameraName, fogNodeName):
 	'''
@@ -140,7 +135,13 @@ def get_video_resolution(videoPath):
 		if line.startswith('Stream #0:0'):
 			resolution = re.search('([1-9]\d+x\d+)', line).group(1)
 			return [int(val) for val in resolution.strip().split('x')]
+
 import time
+def dummySleep(max_time):
+	st = time.time()
+	while time.time() - st < max_time:  # Goes through the loop for the specified time
+		continue
+
 def main_listen():
 	'''
 	To listen to the folder with received files, this process communicates with the parent
@@ -149,15 +150,17 @@ def main_listen():
 	global ppid, folderPath, numVideosReceived, videoNumToStartEncoding
 	ppid = os.getppid()
 	numVideosAnalyzed = 0
+	resolution = None
 
 	folderPath = os.path.abspath(folderPath)
 	cameraName, fogNodeName = getFogAndCameraName(folderPath)
-	count_file_path = getCountLogFileName(cameraName, fogNodeName)
+	count_file_path = getCountLogFilePath(cameraName, fogNodeName)
+	encoding_folder_path = getEncodedVideoFolderPath(cameraName, fogNodeName)
 	line_coordinates = getLineCoordinatesForCamera(cameraName, fogNodeName)
 
 	# Setup signal handlers
 	signal.signal(signal.SIGUSR1, processVideos)
-	signal.signal(signal.SIGUSR2, calculateEncodingParams)
+	signal.signal(signal.SIGUSR2, signalEncodeParams)
 	signal.signal(signal.SIGINT, terminateProcess)
 
 	print('*****************My PID is:', os.getpid(), "PPID is:", ppid, "*****************")
@@ -172,30 +175,58 @@ def main_listen():
 		signal.pause()
 		print("WOKEUP---------------------", numVideosReceived)
 		while numVideosAnalyzed < numVideosReceived:
-			if sortedFiles == []:
+			if sortedFiles == []: # Creating a list of files in sorted order
 				videoFiles = os.listdir(folderPath)
 				sortedFiles = sortFiles(videoFiles)
 
 			videoFile = sortedFiles.pop(0) #Retreive the next file to analyze
 			print("Analyzing file: ", videoFile)
 			videoAbsPath = os.path.abspath(os.path.join(folderPath, videoFile))
-			# print("ABS:", videoAbsPath)
+			start_vid_num = videoNumToStartEncoding #Global variable can change, so create a local copy
 
-			if  numVideosAnalyzed+1 == videoNumToStartEncoding:
-				print("CALCULATE ENCODING NOW with", videoFile, "========")
+			###########ALSO, CHANGE RESOLUTION WHEN RECEIVE A VIDEO WITH NEW ENCODING PARAMS
+
+			# If the video is the first to be encoded
+			if numVideosAnalyzed+1 == start_vid_num:
+				# Storing the counts before initializing the framework
+				write_count(count_file_path)
+
+				print("CALCULATE ENCODING NOW with FIRST", videoFile, "========")
+
+				# Initializing the framework
 				resolution = get_video_resolution(videoAbsPath)
-				os.kill(ppid, signal.SIGABRT)
-				videoNumToStartEncoding = None
-				st = time.time()
-				while time.time() - st < 4: #Goes through the loop for the specified time
-					continue
-				# initialize_vars(line_coordinates, count_file_path, resolution)
+				initialize_vars(line_coordinates, resolution)
 
-			time.sleep(1)
-			# main(videoAbsPath)
+				#Removes all files in the encoding folder (if any)
+				fPath = os.path.join(encoding_folder_path, "videos")
+				if len(os.listdir(fPath)):
+					os.system("rm {}/*.mp4".format(fPath))
 
-			#Removing file after analysis
-			os.remove(videoAbsPath)
+			# Perform vehicle counting
+			main(videoAbsPath)
+
+			if 	numVideosAnalyzed+1 >= start_vid_num and \
+				numVideosAnalyzed+1 <=  start_vid_num + NUM_VIDEOS_FOR_ENCODING-1:
+				print("IN RANGE with", videoFile, "========")
+
+				# Move the video to the encoding folder
+				os.rename(videoAbsPath, os.path.join(encoding_folder_path, "videos", videoFile))
+
+				if numVideosAnalyzed+1 ==  start_vid_num + NUM_VIDEOS_FOR_ENCODING-1:
+					# if at the last video, compute the encoding parameters
+					print("LAST with", videoFile, "========")
+
+					high_resolution_count = 100################
+					calculate_encoding_params(encoding_folder_path, high_resolution_count)
+
+					os.kill(ppid, signal.SIGABRT)
+
+			else:
+				print("NORMAL ANALYSIS", videoFile)
+				dummySleep(1)
+
+				#Removing file after analysis
+				os.remove(videoAbsPath)
 			numVideosAnalyzed += 1
 
 		# numVideosAnalyzed, numVideosReceived = 0, 0 #Reset variables

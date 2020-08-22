@@ -1,0 +1,1 @@
+Parameters: Bitrate-100; FPS-7

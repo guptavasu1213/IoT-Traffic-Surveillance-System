@@ -7,11 +7,13 @@ ap.add_argument("-lc", "--lineCoordinates",help="line coordinates (separated by 
 				\"x1,y1,x2,y2; x1,y1,x2,y2\"", required=True)
 ap.add_argument("-fp", "--folderPath", help="Path to the detection algorithm folder. Only pass this flag if running "
 											"this file outside the folder", required=False, default="")
-ap.add_argument("-r", "--resolutionRatio",help="only pass if trying different resolutions: \
-	video resolution ratio = current resolution/original resolution; Pass 'WidthRatioxHeightRatio'", required=False, default='1x1')
+# ap.add_argument("-r", "--resolutionRatio",help="only pass if trying different resolutions: \
+# 	video resolution ratio = current resolution/original resolution; Pass 'WidthRatioxHeightRatio'", required=False, default='1x1')
 ap.add_argument("-cf", "--CountFilePath",help="count file path", required=False, default="count_log/")
 
 args = vars(ap.parse_args())
+
+resolution = [1920, 1080] #############SWITCH IT
 
 import sys
 import os
@@ -99,7 +101,7 @@ def main(yolo):
 	vehicle_count = 0
 
 	# Line intersection counter
-	line_counter = Counter(args['lineCoordinates'], args['resolutionRatio'])
+	line_counter = Counter(args['lineCoordinates'], resolution)
 	total_frames = video_capture.get(cv2.CAP_PROP_FRAME_COUNT)
 
 	#Initializing the progress bar
@@ -215,9 +217,9 @@ def main(yolo):
 	
 	fileName = args['input'].split("/")[-1].split(".")[0] #without extension
 
-	#Writing to a log file
-	with open(args['CountFilePath'], 'w') as file:
-		file.write(str(vehicle_count))
+	# #Writing to a log file
+	# with open(args['CountFilePath'], 'w') as file:
+	# 	file.write(str(vehicle_count))
 
 	if len(pts[track.track_id]) != None:
 	   print(args["input"][43:57]+": "+ str(vehicle_count) + ' vehicles found')

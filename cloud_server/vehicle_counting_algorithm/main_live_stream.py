@@ -27,7 +27,6 @@ from tqdm import tqdm
 # Line counter method
 from counter import *
 
-
 # PURPOSE: Displaying the FPS of the detected video
 # PARAMETERS: Start time of the frame, number of frames within the same second
 # RETURN: New start time, new number of frames
@@ -62,27 +61,46 @@ encoder = gdet.create_box_encoder(model_filename, batch_size=1)
 metric = nn_matching.NearestNeighborDistanceMetric("cosine", max_cosine_distance, nn_budget)
 tracker = Tracker(metric)
 
-
-vehicle_count = None
+vehicle_count = 0
 line_counter = None
-count_file_path = None
 
 yolo = YOLO(PATH_TO_FOLDER)
 
-def initialize_vars(coordinates, path, currentResolution):
+# Used when the framework is used for different videos
+saved_vehicle_count = None
+saved_tracker = None
+saved_line_counter = None
+saved_counter = None
+
+def save_tracking_components():
+    global saved_counter, saved_tracker, saved_vehicle_count, saved_line_counter
+    saved_vehicle_count = vehicle_count
+    saved_tracker = tracker
+    saved_line_counter = line_counter
+    saved_counter = counter
+
+def reload_from_saved():
+    global counter, tracker, vehicle_count, line_counter
+    vehicle_count = saved_vehicle_count
+    tracker = saved_tracker
+    line_counter = saved_line_counter
+    counter = saved_counter
+
+def initialize_vars(coordinates, currentResolution):
     '''
 
     '''
-    global line_counter, count_file_path, vehicle_count
+    global line_counter, vehicle_count, counter, tracker
     vehicle_count = 0
     line_counter = Counter(coordinates, currentResolution)
-    count_file_path = path
-def write_count():
+    counter = [] ####MAYBE TAKE IT OUT
+    tracker = Tracker(metric) ####MAYBE TAKE IT OUT
+
+def write_count(count_file_path):
     global vehicle_count
     # Writing to a log file
     with open(count_file_path, 'a') as file:
         file.write(str(vehicle_count)+"\n")
-    vehicle_count = 0 #Reset count
 
 import time
 
@@ -91,8 +109,7 @@ def main(video_file_path):
 
     fps = 0.0
 
-    global vehicle_count
-    global num_frames
+    global vehicle_count, num_frames
 
     num_frames = 0
 

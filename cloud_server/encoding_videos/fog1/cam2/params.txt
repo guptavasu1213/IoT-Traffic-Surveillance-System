@@ -1,1 +1,1 @@
-Parameters: Bitrate-500; FPS-9
+Parameters: Bitrate-400; FPS-11

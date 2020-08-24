@@ -26,7 +26,7 @@ ppid = 0
 videoNumToStartEncoding = None
 
 VIDEO_LENGTH = 1 #SEC
-ENCODING_COMPUTATION_TIME = 3 #SEC
+ENCODING_COMPUTATION_TIME = 3 #Num of secs the encoding should be performed for
 NUM_VIDEOS_FOR_ENCODING = round(ENCODING_COMPUTATION_TIME/VIDEO_LENGTH)
 
 def processVideos(signum, stack):
@@ -39,8 +39,10 @@ def processVideos(signum, stack):
 	os.kill(ppid, signal.SIGUSR1)
 
 def signalEncodeParams(signum, stack):
-	global videoNumToStartEncoding
+	global videoNumToStartEncoding, numVideosReceived
+	numVideosReceived += 1
 	videoNumToStartEncoding = numVideosReceived
+	os.kill(ppid, signal.SIGUSR1)
 
 def terminateProcess(signum, stack):
 	'''
@@ -191,7 +193,7 @@ def main_listen():
 				# Storing the counts before initializing the framework
 				write_count(count_file_path)
 
-				print("CALCULATE ENCODING NOW with FIRST", videoFile, "========")
+				print("\n\nXXXXXXXXXXXXXXXXXXXX CALCULATE ENCODING NOW with FIRST", videoFile, "XXXXXXXXXXXXXXXXXXXX")
 
 				# Initializing the framework
 				resolution = get_video_resolution(videoAbsPath)
@@ -199,11 +201,11 @@ def main_listen():
 
 				#Removes all files in the encoding folder (if any)
 				fPath = os.path.join(encoding_folder_path, "videos")
-				if len(os.listdir(fPath)):
+				if len(os.listdir(fPath)): ############## REMOVE AT THE END
 					os.system("rm {}/*.mp4".format(fPath))
 
 			# Perform vehicle counting
-			main(videoAbsPath)
+			count_vehicles(videoAbsPath)
 
 			if 	numVideosAnalyzed+1 >= start_vid_num and \
 				numVideosAnalyzed+1 <=  start_vid_num + NUM_VIDEOS_FOR_ENCODING-1:
@@ -216,9 +218,14 @@ def main_listen():
 					# if at the last video, compute the encoding parameters
 					print("LAST with", videoFile, "========")
 
-					high_resolution_count = 100################
-					calculate_encoding_params(encoding_folder_path, high_resolution_count)
-
+					# high_resolution_count = 100################
+					high_resolution_count = get_vehicle_count()
+					save_tracking_components()
+					# initialize_vars(line_coordinates, resolution)
+					print("\n\n===============================ENCODINGGG++++++++++++++++++++++\n\n")
+					calculate_encoding_params(encoding_folder_path, high_resolution_count, count_vehicles,
+											  initialize_vars, line_coordinates, resolution)
+					reload_from_saved()
 					os.kill(ppid, signal.SIGABRT)
 
 			else:

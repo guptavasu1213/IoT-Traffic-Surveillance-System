@@ -117,8 +117,16 @@ def receiveFiles(connectionSocket, folderName, listeningProcessPid, fogName, cam
 			# Writing to a file
 			if not receivedAllVideos:
 				file.write(videoReceived)
-				# print("FWRITE", '-'*15)
-				os.kill(listeningProcessPid, signal.SIGUSR1)
+
+				# When encoding parameters have to be calculated, send its signal
+				if calculateEncodingParams:
+					print("SEND ENCODING SIGNAL TO CHILD")
+					# Send a signal to denote that the
+					os.kill(listeningProcessPid, signal.SIGUSR2)
+					calculateEncodingParams = False
+				# Otherwise, send the normal video receival signal
+				else:
+					os.kill(listeningProcessPid, signal.SIGUSR1)
 
 				#Wait for the listening process to receive the video
 				while True:
@@ -128,12 +136,7 @@ def receiveFiles(connectionSocket, folderName, listeningProcessPid, fogName, cam
 					else:
 						# print("========= BEFORRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
 						signal.pause()
-						print("========= AFTRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
-
-				if calculateEncodingParams:
-					# Send a signal
-					os.kill(listeningProcessPid, signal.SIGUSR2)
-					calculateEncodingParams = False
+						# print("========= AFTRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
 
 	# Terminate the listening process
 	os.kill(listeningProcessPid, signal.SIGINT)

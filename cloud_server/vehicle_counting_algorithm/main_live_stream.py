@@ -27,17 +27,6 @@ from tqdm import tqdm
 # Line counter method
 from counter import *
 
-# PURPOSE: Displaying the FPS of the detected video
-# PARAMETERS: Start time of the frame, number of frames within the same second
-# RETURN: New start time, new number of frames
-def displayFPS(start_time, num_frames):
-    current_time = int(time.time())
-    time_elapsed = current_time - start_time
-    if (current_time > start_time):
-        fps = num_frames / time_elapsed
-        print("FPS:", fps)
-
-
 pts = [deque(maxlen=30) for _ in range(9999)]
 warnings.filterwarnings('ignore')
 
@@ -53,47 +42,49 @@ max_cosine_distance = 0.3
 nn_budget = None
 nms_max_overlap = 1.0
 
-counter = []
 # deep_sort
 model_filename = os.path.join(PATH_TO_FOLDER, 'model_data/market1501.pb')
 encoder = gdet.create_box_encoder(model_filename, batch_size=1)
 
-metric = nn_matching.NearestNeighborDistanceMetric("cosine", max_cosine_distance, nn_budget)
-tracker = Tracker(metric)
-
+metric = None
+tracker = None
 vehicle_count = 0
 line_counter = None
+counter = []
 
 yolo = YOLO(PATH_TO_FOLDER)
 
 # Used when the framework is used for different videos
 saved_vehicle_count = None
+saved_metric = None
 saved_tracker = None
 saved_line_counter = None
 saved_counter = None
 
 def save_tracking_components():
-    global saved_counter, saved_tracker, saved_vehicle_count, saved_line_counter
+    global saved_counter, saved_tracker, saved_vehicle_count, saved_line_counter, saved_metric
     saved_vehicle_count = vehicle_count
     saved_tracker = tracker
     saved_line_counter = line_counter
     saved_counter = counter
 
 def reload_from_saved():
-    global counter, tracker, vehicle_count, line_counter
+    global counter, tracker, vehicle_count, line_counter, metric
     vehicle_count = saved_vehicle_count
     tracker = saved_tracker
     line_counter = saved_line_counter
     counter = saved_counter
+    metric = saved_metric
 
 def initialize_vars(coordinates, currentResolution):
     '''
 
     '''
-    global line_counter, vehicle_count, counter, tracker
+    global line_counter, vehicle_count, counter, tracker, metric
     vehicle_count = 0
     line_counter = Counter(coordinates, currentResolution)
     counter = [] ####MAYBE TAKE IT OUT
+    metric = nn_matching.NearestNeighborDistanceMetric("cosine", max_cosine_distance, nn_budget)
     tracker = Tracker(metric) ####MAYBE TAKE IT OUT
 
 def write_count(count_file_path):
@@ -102,9 +93,12 @@ def write_count(count_file_path):
     with open(count_file_path, 'a') as file:
         file.write(str(vehicle_count)+"\n")
 
+def get_vehicle_count():
+    return vehicle_count
+
 import time
 
-def main(video_file_path):
+def count_vehicles(video_file_path):
     video_capture = cv2.VideoCapture(video_file_path)
 
     fps = 0.0
@@ -217,3 +211,4 @@ def main(video_file_path):
 
     video_capture.release()
     cv2.destroyAllWindows()
+    return vehicle_count

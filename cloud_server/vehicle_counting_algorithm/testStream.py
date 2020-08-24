@@ -34,7 +34,7 @@ while numVideosReceived > 0:
     print("ABS:", videoAbsPath)
     cameraName, fogNodeName = getFogAndCameraName(videoAbsPath)
     # print("Cam:" , cameraName, "Fog:", fogNodeName)
-    main(videoAbsPath)
+    count_vehicles(videoAbsPath)
     # countVideo(videoAbsPath, fogNodeName, cameraName)
     # Removing file after analysis
     # os.remove(videoAbsPath)

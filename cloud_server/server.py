@@ -40,9 +40,8 @@ def server():
                 sys.exit(1)
             # If it is a client process
             elif  pid == 0:
-                serverSocket.close() 
-
-                clientProcessFunctionality(connectionSocket)                
+                serverSocket.close()
+                receiveAndAnalyzeVideos(connectionSocket)
                 return
             #Parent doesn't need this connection
             connectionSocket.close()

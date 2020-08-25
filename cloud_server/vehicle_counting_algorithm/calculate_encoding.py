@@ -2,21 +2,28 @@ import os
 
 #Error threshold for computing the optimal parameters
 THRESHOLD = 0.20
-#####################REMOVE THIS FROM HERE
+
+##################### REMOVE THIS FROM HERE
 import time
 def dummySleep(max_time):
 	st = time.time()
 	while time.time() - st < max_time:  # Goes through the loop for the specified time
 		continue
+#####################
 
 def sortFiles(fileList):
 	'''
+	The list of files is sorted and returned back
 	:param fileList: List of file names which are of the form "<integer>.<extension>"
+	:return: A list of sorted files
 	'''
 	sortedFilesWithoutExtension = dict()
 	for file in fileList:
-		sortedFilesWithoutExtension[(int(file.split(".")[0]))] = file
-
+		try:
+			sortedFilesWithoutExtension[(int(file.split(".")[0]))] = file
+		except:
+			print("\n\nERROR: The file name should only contain a number with an extension."
+				  "Example: 1.mp4")
 	sortedFiles = []
 	for file in sorted(sortedFilesWithoutExtension):
 		sortedFiles.append(sortedFilesWithoutExtension[file])
@@ -48,17 +55,22 @@ def grid_search(video_path, path_to_folder, high_resolution_count, count_vehicle
 			break
 		else:
 			if encoding_counter % NUM_VIDEOS_TO_SKIP != 0: # Skipping every nth video
-				print("INCREMENT BR")
+				print("INCREMENT BR to", bitrate)
 				bitrate += BITRATE_STEP #Incrementing the bitrate
 			else:
-				print("INCREMENT FPS")
+				print("INCREMENT FPS to", fps)
 				fps += FPS_STEP #Incrementing the FPS
 			encoding_counter += 1
 
-	# os.remove(temp_output_file)
+	os.remove(temp_output_file)
 	return bitrate, fps
 
 def save_parameters(filepath, bitrate, fps):
+	'''
+	:param filepath: The path of the file in which the parameters have to be written
+ 	:param bitrate: Bitrate
+	:param fps: Frames per second (fps)
+	'''
 	with open(filepath, 'w') as f:
 		f.write("Parameters: Bitrate-{}; FPS-{}".format(bitrate, fps))
 
@@ -66,6 +78,12 @@ def calculate_encoding_params(path_to_folder, high_resolution_count, count_vehic
 							  line_coordinates, currentResolution):
 	'''
 	Compute the encoding parameters and save them in a text file
+	:param path_to_folder: Path to the encoding folder
+	:param high_resolution_count: The count of the high resolution video
+	:param count_vehicles: Function for counting vehicles
+	:param initialize_vars: Function for initializing variables in the vehicle counting algorithm
+	:param line_coordinates: The line coordinates for the camera used for counting
+	:param currentResolution: The resolution of the video
 	'''
 	fPath = os.path.join(path_to_folder, "videos")
 	temp_file_path = os.path.join(path_to_folder, "file_names.txt")
@@ -90,6 +108,6 @@ def calculate_encoding_params(path_to_folder, high_resolution_count, count_vehic
 	#Save parameters in a log file
 	save_parameters(parameter_log_file_path, bitrate, fps)
 
+	# Removing all the temporary files
 	os.remove(temp_file_path)
-	# os.remove(concat_output_file_path)
 	os.system("rm {}/*.mp4".format(fPath))

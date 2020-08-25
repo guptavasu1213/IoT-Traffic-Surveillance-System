@@ -1,15 +1,21 @@
 from numpy import sign
 
 def get_slope(line):
-	# (y2-y1)/(x2-x1)
+	'''
+	Calculate slope using the formula: (y2-y1)/(x2-x1)
+	'''
 	###########Can crash if x1 == x2
 	return (line[1][1]-line[0][1])/(line[1][0]-line[0][0])
 def get_intercept(line, slope):
-	# y - mx = b
+	'''
+	Calculate intercept using formula: y - mx = b
+	'''
 	return line[0][1] - (slope*line[0][0])
 
 def get_line_result(x, y, m, b):
-	# mx - y + b = 0 in the form Ax + By +c = 0
+	'''
+	Calculating the result by using mx - y + b = 0 in the form Ax + By +c = 0
+	'''
 	return (m*x) - y + b 
 
 def format_coordinates(lines, currentResolution):
@@ -24,12 +30,14 @@ def format_coordinates(lines, currentResolution):
 		points = val.strip().split(',')
 		for i in range(2):
 			p = (int(points[i*2].strip()), int(points[(i*2)+1].strip()))
-			# print(p, currentResolution)
 			p = (round(p[0]*currentResolution[0]/100), round(p[1]*currentResolution[1]/100))
 			line_coord[-1].append(p)
 	return line_coord
 
 class Counter():
+	'''
+	Counts the vehicles which have intersected with the line
+	'''
 	def __init__(self, lines, currentResolution):
 		lines = format_coordinates(lines, currentResolution)
 		self.trackedID = set()

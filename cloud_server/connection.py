@@ -1,5 +1,3 @@
-# from listenToStreamedFiles import *
-
 import os
 import signal
 import subprocess
@@ -11,21 +9,21 @@ sendEncodingParams = False
 
 def listeningProcessReady(signum, stack):
 	'''
-	Signal handler to specify that the child process is ready to listen
+	Signal handler for SIGUSR2 to specify that the child process is ready to listen
 	'''
 	global listening
 	listening = True
 
 def listeningProcessReceivedVideo(signum, stack):
 	'''
-	Signal handler to specify that the child process has received the video
+	Signal handler for SIGUSR1 to specify that the child process has received the video
 	'''
 	global receiveMoreVideos
 	receiveMoreVideos = True
 
 def receiveEncodingParams(signum, stack):
 	'''
-
+	Signal handler for SIGABRT to notify the sending of encoding parameters to the fog node
 	'''
 	global sendEncodingParams
 	sendEncodingParams = True
@@ -52,10 +50,15 @@ def sendAcknowledgment(socket, message="OK"):
 	socket.send(message.encode('ascii'))
 
 def getEncodingParameters(fogName, cameraName):
+	'''
+	Retrieving the calculated encoding parameters for the given fog node and the camera
+	:param cameraName: The name of camera
+	:param fogNodeName: The name of fog node
+	'''
 	with open("./encoding_videos/{}/{}/params.txt".format(fogName, cameraName), "r") as file:
 		content = file.read().strip()
 	return content
-	# return "Parameters: Bitrate-100; FPS-10"
+
 def receiveFiles(connectionSocket, folderName, listeningProcessPid, fogName, cameraName):
 	'''
 	The function receives video files from the given socket and saves those videos in
@@ -97,16 +100,16 @@ def receiveFiles(connectionSocket, folderName, listeningProcessPid, fogName, cam
 					calculateEncodingParams = True
 					print("ENCODING CALCULATION REQUEST RECEIVED")
 
-				# print(recvfile)
 				if recvfile.endswith(videoTerminationByte):
 					videoReceived = videoReceived[:-len(videoTerminationByte)]
 					count_files += 1
 					print("FILE RECEIVED")
+					# If encoding parameters are calculated, send them to the fog node
 					if sendEncodingParams:
 						parameters = getEncodingParameters(fogName, cameraName)
-						print("NICE"*10)
 						sendAcknowledgment(connectionSocket, parameters)
 						sendEncodingParams = False
+					#Else, send an "OK" acknowledgement
 					else:
 						sendAcknowledgment(connectionSocket)
 					break
@@ -114,7 +117,7 @@ def receiveFiles(connectionSocket, folderName, listeningProcessPid, fogName, cam
 					receivedAllVideos = True
 					os.remove(os.path.join(folderName, fileName))
 					break
-			# Writing to a file
+			# Writing to a file and notifying the listening process about the file receival
 			if not receivedAllVideos:
 				file.write(videoReceived)
 
@@ -134,15 +137,14 @@ def receiveFiles(connectionSocket, folderName, listeningProcessPid, fogName, cam
 						receiveMoreVideos = False
 						break
 					else:
-						# print("========= BEFORRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
 						signal.pause()
-						# print("========= AFTRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
+						print("========= AFTRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
 
 	# Terminate the listening process
 	os.kill(listeningProcessPid, signal.SIGINT)
 
 
-def clientProcessFunctionality(connectionSocket):
+def receiveAndAnalyzeVideos(connectionSocket):
 	'''
 	- Receives the information about the fog node and camera
 	- Sets up a process to listen to the incoming files in the camera folder
@@ -162,6 +164,7 @@ def clientProcessFunctionality(connectionSocket):
 
 	folderPath = "./streamed_files/{}/{}".format(fogName, cameraName)
 
+	# Spawn a process to listen to the streamed files and perform analysis upon receival
 	process = subprocess.Popen(["python3", "./vehicle_counting_algorithm/listenToStreamedFiles.py", "-fp", folderPath])
 
 	# Waiting until the listening process is ready

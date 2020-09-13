@@ -1,6 +1,7 @@
 import subprocess
 from cv2 import VideoCapture, CAP_PROP_FRAME_COUNT, CAP_PROP_FPS
 import argparse
+from encoding import get_video_length
 
 # Parsing the arguments to retrieve the camera and the fog name
 ap = argparse.ArgumentParser()
@@ -10,15 +11,6 @@ ap.add_argument("-d", "--chunk_duration", help="Duration of each video segment",
 	default=1.0, type=float)
 args = vars(ap.parse_args())
 
-def get_video_length(input_file):
-	"""
-	:param input_file:
-	:return: Total video length in seconds
-	"""
-	video = VideoCapture(input_file)
-	fps = video.get(CAP_PROP_FPS)
-	total_frames = video.get(CAP_PROP_FRAME_COUNT)
-	return float(total_frames) / float(fps)
 
 def main(input_file, camera_folder_name, seconds):
 	"""

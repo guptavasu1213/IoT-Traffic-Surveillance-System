@@ -25,8 +25,8 @@ sudo apt-get upgrade python3
 ```
 
 ## Usage
-* For running the Cloud Server scripts, refer to the [README.md]()
-* For running the Fog Node scripts, refer to the [README.md]() 
+* For running the Cloud Server scripts, refer to the [README.md](https://github.com/guptavasu1213/adaptive-video-encoding/blob/master/cloud_server/README.md)
+* For running the Fog Node scripts, refer to the [README.md](https://github.com/guptavasu1213/adaptive-video-encoding/blob/master/fog_node/README.md) 
 
 ## Project Status 
 

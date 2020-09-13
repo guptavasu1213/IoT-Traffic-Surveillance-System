@@ -1,3 +1,9 @@
+import argparse
+ap = argparse.ArgumentParser()
+ap.add_argument("-et", "--encoding_time", help="The duration of video analysis to calculate the encoding parameters (in sec)", required=False, 
+    default=10, type=int)
+args = vars(ap.parse_args())
+
 import socket
 import sys
 from connection import *
@@ -41,7 +47,7 @@ def server():
             # If it is a client process
             elif  pid == 0:
                 serverSocket.close()
-                receiveAndAnalyzeVideos(connectionSocket)
+                receiveAndAnalyzeVideos(connectionSocket, args["encoding_time"])
                 return
             #Parent doesn't need this connection
             connectionSocket.close()

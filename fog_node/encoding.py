@@ -1,5 +1,15 @@
 import os
 
+def get_video_length(input_file):
+	"""
+	:param input_file:
+	:return: Total video length in seconds
+	"""
+	video = VideoCapture(input_file)
+	fps = video.get(CAP_PROP_FPS)
+	total_frames = video.get(CAP_PROP_FRAME_COUNT)
+	return float(total_frames) / float(fps)
+	
 def get_param(message):
 	'''
 	Parse message of format: "<Parameter Name>-<numerical value>"

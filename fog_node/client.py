@@ -2,7 +2,7 @@ import socket
 import sys
 import os
 import time
-from encoding import encode_video
+from encoding import encode_video, get_video_length
 
 def receiveAcknowlegdement(socket, message="OK", expectEncodingParams=False):
 	'''
@@ -65,12 +65,15 @@ def client(fogNodeName, cameraName, server_IP, server_port, max_encoding_calc_ti
 		#Client connect with the server
 		clientSocket.connect((server_IP, server_port))
 
-		#Send Fog Node name and Camera name
-		clientSocket.send("{}~{}".format(fogNodeName, cameraName).encode('ascii'))
-		receiveAcknowlegdement(clientSocket)
 
 		folderPath = "./surveillance-cam-videos/" + cameraName
 		videoFiles = sortFiles(os.listdir(folderPath))
+
+		video_length = get_video_length(os.path.join(folderPath, videoFiles[0]))
+
+		#Send Fog Node name and Camera name
+		clientSocket.send("{}~{}~{}".format(fogNodeName, cameraName, video_length).encode('ascii'))
+		receiveAcknowlegdement(clientSocket)
 
 		# Byte which denotes the calculation of encoding parameters
 		encodingCalculationByte = "CALC".encode('ascii')

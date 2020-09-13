@@ -172,16 +172,17 @@ def is_registation_request(connectionSocket):
 		exit(0)
 	return splitted_message
 
-def receiveAndAnalyzeVideos(connectionSocket):
+def receiveAndAnalyzeVideos(connectionSocket, encoding_time):
 	'''
 	- Receives the information about the fog node and camera
 	- Sets up a process to listen to the incoming files in the camera folder
 	- Receive the files from the client
 	:param connectionSocket: Socket with which the connection has already been estabilished
+	:param encoding_time: The duration of video analysis to calculate the encoding parameters 
 	'''
 	signal.signal(signal.SIGUSR2, listeningProcessReady)
 
-	fog_name, camera_name = is_registation_request(connectionSocket)
+	fog_name, camera_name, duration = is_registation_request(connectionSocket)
 	sendAcknowledgment(connectionSocket)
 
 	print("Fog name is:", fog_name)
@@ -193,7 +194,8 @@ def receiveAndAnalyzeVideos(connectionSocket):
 	check_camera_registration(folder_path)
 
 	# Spawn a process to listen to the streamed files and perform analysis upon receival
-	process = subprocess.Popen(["python3", "./vehicle_counting_algorithm/listenToStreamedFiles.py", "-fp", folder_path])
+	process = subprocess.Popen(["python3", "./vehicle_counting_algorithm/listenToStreamedFiles.py", 
+		"-fp", folder_path, "-d", float(duration), "-et", encoding_time])
 
 	# Waiting until the listening process is ready
 	while True:

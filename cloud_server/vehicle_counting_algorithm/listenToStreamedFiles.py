@@ -6,6 +6,8 @@ import os
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-fp", "--folderPath", help="folder path of streamed camera videos", required=True)
+ap.add_argument("-d", "--duration", help="duration of each video segment", required=True)
+ap.add_argument("-et", "--encoding_time", help="The duration of video analysis to calculate the encoding parameters", required=True)
 args = vars(ap.parse_args())
 
 # Error check the folder path
@@ -26,8 +28,8 @@ terminate = False
 ppid = 0
 videoNumToStartEncoding = None
 
-VIDEO_LENGTH = 1 #SEC
-ENCODING_COMPUTATION_TIME = 3 #Num of secs the encoding should be performed for
+VIDEO_LENGTH = args["duration"] #SEC
+ENCODING_COMPUTATION_TIME = args["encoding_time"] #Num of secs the encoding should be performed for
 NUM_VIDEOS_FOR_ENCODING = round(ENCODING_COMPUTATION_TIME/VIDEO_LENGTH)
 
 def processVideos(signum, stack):

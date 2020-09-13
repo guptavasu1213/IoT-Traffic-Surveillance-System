@@ -8,7 +8,19 @@ In the [detection_logs](https://github.com/guptavasu1213/IoT-Traffic-Surveillanc
 
 ## Prerequisites
 * OpenCV
-* Tracking algo already has everything listed#############
+* sklean
+* pillow
+* numpy 1.15.0
+* torch 1.3.0
+* tensorflow-gpu 1.13.1
+* CUDA 10.0
+
+
+```
+pip3 install -r ./traffic_density_measurement_algorithm/requirements.txt
+```
+
+* Download YoloV4 model weights: [Click Here](https://drive.google.com/file/d/1RLSQB-SFWLsJlDKdoQe4zAOUe858ID2a/view?usp=sharing)
 
 ## Usage
 In order to initialize the server, we run the following from the current folder:

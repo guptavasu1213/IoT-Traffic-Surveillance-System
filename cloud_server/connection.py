@@ -143,6 +143,14 @@ def receiveFiles(connectionSocket, folderName, listeningProcessPid, fogName, cam
 	# Terminate the listening process
 	os.kill(listeningProcessPid, signal.SIGINT)
 
+def check_camera_registration(folder_path):
+	'''
+	Check if the camera is registered by verifying the existence of the camera folder.
+	:param folder_path: Path to the camera folder
+	'''
+	if not os.path.exists(folder_path):
+		print("ERROR: The camera is not registered.")
+		exit(1)
 
 def receiveAndAnalyzeVideos(connectionSocket):
 	'''
@@ -154,27 +162,30 @@ def receiveAndAnalyzeVideos(connectionSocket):
 	signal.signal(signal.SIGUSR2, listeningProcessReady)
 
 	# Getting Fog node name
-	fogName = connectionSocket.recv(2048).decode('ascii')
-	print("Fog name is:", fogName)
+	fog_name = connectionSocket.recv(2048).decode('ascii')
+	print("Fog name is:", fog_name)
 	sendAcknowledgment(connectionSocket)
 	# Getting the camera name
-	cameraName = connectionSocket.recv(2048).decode('ascii')
-	print("Cam name is:", cameraName)
+	camera_name = connectionSocket.recv(2048).decode('ascii')
+	print("Cam name is:", camera_name)
 	sendAcknowledgment(connectionSocket)
 
-	folderPath = "./streamed_files/{}/{}".format(fogName, cameraName)
+	folder_path = "./streamed_files/{}/{}".format(fog_name, camera_name)
+
+	# Check if the camera is registered
+	check_camera_registration(folder_path)
 
 	# Spawn a process to listen to the streamed files and perform analysis upon receival
-	process = subprocess.Popen(["python3", "./vehicle_counting_algorithm/listenToStreamedFiles.py", "-fp", folderPath])
+	process = subprocess.Popen(["python3", "./vehicle_counting_algorithm/listenToStreamedFiles.py", "-fp", folder_path])
 
 	# Waiting until the listening process is ready
 	while True:
-		signal.pause() #Suspends the current process
+		signal.pause() # Suspends the current process
 		if listening:
 			break
 
 	# Receive files from the socket and store them
-	receiveFiles(connectionSocket, folderPath, process.pid, fogName, cameraName)
+	receiveFiles(connectionSocket, folder_path, process.pid, fog_name, camera_name)
 
 	print("Closing socket")
 	connectionSocket.close()

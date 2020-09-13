@@ -152,6 +152,26 @@ def check_camera_registration(folder_path):
 		print("ERROR: The camera is not registered.")
 		exit(1)
 
+def is_registation_request(connectionSocket):
+	'''
+	Check if the message sent by the fog node is for registering new devices
+	The program registers the camera and exits if the registration message is received.
+	:return : Fog node and camera name (if the program does not exit)
+	'''
+	message = connectionSocket.recv(2048).decode('ascii')
+	splitted_message = message.split("~")
+	if message.startswith("REGISTER CAM"):
+		print("Camera Registration Message received!")
+		fog_name = splitted_message[1]
+		cam_name = splitted_message[2]
+		line_coordinates = splitted_message[3]
+
+		# Register Cam and its corresponding line coordinates
+		from register_camera import register
+		register(fog_name, cam_name, line_coordinates)
+		exit(0)
+	return splitted_message
+
 def receiveAndAnalyzeVideos(connectionSocket):
 	'''
 	- Receives the information about the fog node and camera
@@ -161,14 +181,11 @@ def receiveAndAnalyzeVideos(connectionSocket):
 	'''
 	signal.signal(signal.SIGUSR2, listeningProcessReady)
 
-	# Getting Fog node name
-	fog_name = connectionSocket.recv(2048).decode('ascii')
+	fog_name, camera_name = is_registation_request(connectionSocket)
+	sendAcknowledgment(connectionSocket)
+
 	print("Fog name is:", fog_name)
-	sendAcknowledgment(connectionSocket)
-	# Getting the camera name
-	camera_name = connectionSocket.recv(2048).decode('ascii')
 	print("Cam name is:", camera_name)
-	sendAcknowledgment(connectionSocket)
 
 	folder_path = "./streamed_files/{}/{}".format(fog_name, camera_name)
 

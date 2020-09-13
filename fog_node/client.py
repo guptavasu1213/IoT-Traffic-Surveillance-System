@@ -45,13 +45,14 @@ def sortFiles(fileList):
 		sortedFiles.append(sortedFilesWithoutExtension[file])
 	return sortedFiles
 
-def client(fogNodeName, cameraName):
+def client(fogNodeName, cameraName, server_IP, server_port, max_encoding_calc_time):
 	'''
 	Initiates the client and attempts to build a connection with the server
+	:param fogNodeName:
+	++++++++++++++++++++++
+	++++++++++++++++++++++
+	:param max_encoding_calc_time: The time interval at which the high resolution video with is sent for calculating the encoding
 	'''
-	# Server Information
-	serverName = '199.116.235.176'
-	serverPort = 12000
 
 	#Create client socket that using IPv4 and TCP protocols
 	try:
@@ -62,17 +63,13 @@ def client(fogNodeName, cameraName):
 
 	try:
 		#Client connect with the server
-		clientSocket.connect((serverName,serverPort))
+		clientSocket.connect((server_IP, server_port))
 
-		#Send Fog Node Name
-		clientSocket.send(fogNodeName.encode('ascii'))
+		#Send Fog Node name and Camera name
+		clientSocket.send("{}~{}".format(fogNodeName, cameraName).encode('ascii'))
 		receiveAcknowlegdement(clientSocket)
 
-		# Send Camera name
-		clientSocket.send(cameraName.encode('ascii'))
-		receiveAcknowlegdement(clientSocket)
-
-		folderPath = "./street-cam-videos/" + cameraName
+		folderPath = "./surveillance-cam-videos/" + cameraName
 		videoFiles = sortFiles(os.listdir(folderPath))
 
 		# Byte which denotes the calculation of encoding parameters
@@ -82,19 +79,17 @@ def client(fogNodeName, cameraName):
 		terminationByte = "END".encode('ascii')
 
 		startEncodingCalculationTime = 0
-		# The time interval at which the high resolution video with is sent for calculating the encoding
-		maxEncodingCalculationTime = 10
 		videoLen = 1 # Length of each video in secs
 
 		encoding_params = None
 
 		for fileName in videoFiles:
-			time.sleep(videoLen+10) #To simulate the recording in real-time
+			time.sleep(videoLen) #To simulate the recording in real-time
 
 			filePath = os.path.join(folderPath, fileName)
 
 			#Checking if the high resolution video for encoding should be sent or not
-			if startEncodingCalculationTime % maxEncodingCalculationTime == 0:
+			if startEncodingCalculationTime % max_encoding_calc_time == 0:
 				sendFile = encodingCalculationByte
 				encoding_params = None #Seng high quality video now
 				print("Send high res")
@@ -102,7 +97,6 @@ def client(fogNodeName, cameraName):
 				sendFile = bytes()
 
 			if encoding_params is not None:
-				####### CHANGE THE FILE PATH THING
 				print("ENCODING:", fileName)
 				filePath = encode_video(filePath, encoding_params, fogNodeName, cameraName)
 

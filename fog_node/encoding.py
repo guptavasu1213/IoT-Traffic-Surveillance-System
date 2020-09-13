@@ -33,7 +33,4 @@ def encode_video(file_path, server_response, fog_name, camera_name):
 	# Encoding the file
 	os.system("ffmpeg -i {} -r {} -b:v {}k -an -y {} 2>/dev/null".format(file_path, fps, bitrate, out_file_path))
 
-	##################################################HAS TO HAPPEN IN THE FINAL PRODUCT
-	# Replace the original file with the encoded file
-	# os.rename(out_file_path, file_path)
-	return out_file_path ###########DONT DO THIS
+	return out_file_path

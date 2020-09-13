@@ -9,6 +9,13 @@ def receiveAcknowlegdement(socket, message="OK", expectEncodingParams=False):
 	This function waits to receive a message at the given socket.
 	If the expected message is not received, then the program terminates.
 	By default, the message is "OK", but can be changed
+
+	:param socket: Socket with which the connection has already been estabilished
+	:param message: [Optional] The expected message through the socket
+	:param expectEncodingParams: [Optional]	Expecting encoding parameters in the message
+
+	:return: Encoding parameters if the encoding parameters are found in the message when
+	the expectEncodingParams flag is True
 	'''
 	socket_message = socket.recv(2048).decode('ascii')
 	if expectEncodingParams:
@@ -75,13 +82,14 @@ def client(fogNodeName, cameraName):
 		terminationByte = "END".encode('ascii')
 
 		startEncodingCalculationTime = 0
-		maxEncodingCalculationTime = 10 #The time interval at which the
+		# The time interval at which the high resolution video with is sent for calculating the encoding
+		maxEncodingCalculationTime = 10
 		videoLen = 1 # Length of each video in secs
 
 		encoding_params = None
 
 		for fileName in videoFiles:
-			time.sleep(videoLen+5) #To simulate the recording in real-time
+			time.sleep(videoLen+10) #To simulate the recording in real-time
 
 			filePath = os.path.join(folderPath, fileName)
 
@@ -94,23 +102,13 @@ def client(fogNodeName, cameraName):
 				sendFile = bytes()
 
 			if encoding_params is not None:
-				#######CHANGE THE FILE PATH THING
+				####### CHANGE THE FILE PATH THING
 				print("ENCODING:", fileName)
 				filePath = encode_video(filePath, encoding_params, fogNodeName, cameraName)
 
-			# count = 0
-			# filename = "/home/vasu/Documents/street-videos/youtubeDownloads/easy.mp4"
 			with open(filePath, 'rb') as file:
 				sendFile += file.read()
-				'''
-				==== If sending a file in pieces
-				while True:
-					count += 1
-					sendfile = file.read(4096)
-					if not sendfile: break
-					# print(count)
-					clientSocket.send(sendfile)
-				'''
+
 			#Appending termination byte at the end of the video
 			sendFile += terminationByte
 			clientSocket.sendall(sendFile) #Send the entire video
@@ -129,6 +127,3 @@ def client(fogNodeName, cameraName):
 		print('An error occurred:',e)
 		clientSocket.close()
 		sys.exit(1)
-
-#----------
-# client()

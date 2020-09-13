@@ -178,3 +178,4 @@ def receiveAndAnalyzeVideos(connectionSocket):
 
 	print("Closing socket")
 	connectionSocket.close()
+receiveAndAnalyzeVideos

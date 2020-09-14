@@ -6,8 +6,9 @@ import os
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-fp", "--folderPath", help="folder path of streamed camera videos", required=True)
-ap.add_argument("-d", "--duration", help="duration of each video segment", required=True)
-ap.add_argument("-et", "--encoding_time", help="The duration of video analysis to calculate the encoding parameters", required=True)
+ap.add_argument("-d", "--duration", help="duration of each video segment", required=True, type=float)
+ap.add_argument("-et", "--encoding_time", help="The duration of video analysis to calculate the encoding parameters",
+				required=True, type=int)
 args = vars(ap.parse_args())
 
 # Error check the folder path

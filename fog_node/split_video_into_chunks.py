@@ -1,5 +1,5 @@
 import subprocess
-from cv2 import VideoCapture, CAP_PROP_FRAME_COUNT, CAP_PROP_FPS
+import os
 import argparse
 from encoding import get_video_length
 
@@ -23,7 +23,7 @@ def main(input_file, camera_folder_name, seconds):
 	extension = input_file[input_file.rfind(".")+1 : ]
 
 	# Creating a folder for storing streamed videos	
-	subprocess.run("mkdir {}".format(folder_path) , shell=True) 
+	os.makedirs(folder_path, exist_ok=True)
 		
 	length_in_seconds = get_video_length(input_file)
 	print(length_in_seconds)

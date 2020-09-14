@@ -194,8 +194,8 @@ def receiveAndAnalyzeVideos(connectionSocket, encoding_time):
 	check_camera_registration(folder_path)
 
 	# Spawn a process to listen to the streamed files and perform analysis upon receival
-	process = subprocess.Popen(["python3", "./vehicle_counting_algorithm/listenToStreamedFiles.py", 
-		"-fp", folder_path, "-d", float(duration), "-et", encoding_time])
+	process = subprocess.Popen(["python3", "./vehicle_counting_algorithm/listenToStreamedFiles.py",
+		"-fp", folder_path, "-d", duration, "-et", encoding_time])
 
 	# Waiting until the listening process is ready
 	while True:

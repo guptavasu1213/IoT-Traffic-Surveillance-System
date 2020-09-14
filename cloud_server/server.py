@@ -47,7 +47,7 @@ def server():
             # If it is a client process
             elif  pid == 0:
                 serverSocket.close()
-                receiveAndAnalyzeVideos(connectionSocket, args["encoding_time"])
+                receiveAndAnalyzeVideos(connectionSocket, str(args["encoding_time"]))
                 return
             #Parent doesn't need this connection
             connectionSocket.close()

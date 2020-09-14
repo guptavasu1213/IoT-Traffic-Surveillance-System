@@ -1,4 +1,5 @@
 import os
+from cv2 import VideoCapture, CAP_PROP_FRAME_COUNT, CAP_PROP_FPS
 
 def get_video_length(input_file):
 	"""
@@ -9,7 +10,7 @@ def get_video_length(input_file):
 	fps = video.get(CAP_PROP_FPS)
 	total_frames = video.get(CAP_PROP_FRAME_COUNT)
 	return float(total_frames) / float(fps)
-	
+
 def get_param(message):
 	'''
 	Parse message of format: "<Parameter Name>-<numerical value>"

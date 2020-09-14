@@ -72,7 +72,7 @@ def client(fogNodeName, cameraName, server_IP, server_port, max_encoding_calc_ti
 		video_length = get_video_length(os.path.join(folderPath, videoFiles[0]))
 
 		#Send Fog Node name and Camera name
-		clientSocket.send("{}~{}~{}".format(fogNodeName, cameraName, video_length).encode('ascii'))
+		clientSocket.send("{}~{}~{}".format(fogNodeName, cameraName, str(video_length)).encode('ascii'))
 		receiveAcknowlegdement(clientSocket)
 
 		# Byte which denotes the calculation of encoding parameters

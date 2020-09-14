@@ -23,10 +23,11 @@ sudo snap install ffmpeg
 ```
 sudo apt-get upgrade python3
 ```
+* Clone this repository and put the `cloud_server` folder on the server machine, and the `fog_node` folder on the fog node machine.
 
 ## Usage
-* For running the Cloud Server scripts, refer to the [README.md](https://github.com/guptavasu1213/adaptive-video-encoding/blob/master/cloud_server/README.md)
-* For running the Fog Node scripts, refer to the [README.md](https://github.com/guptavasu1213/adaptive-video-encoding/blob/master/fog_node/README.md) 
+* For running the Cloud Server scripts, refer to the [README.md](https://github.com/guptavasu1213/IoT-Traffic-Surveillance-System/blob/master/cloud_server/README.md)
+* For running the Fog Node scripts, refer to the [README.md](https://github.com/guptavasu1213/IoT-Traffic-Surveillance-System/blob/master/fog_node/README.md) 
 
 ## Project Status 
 

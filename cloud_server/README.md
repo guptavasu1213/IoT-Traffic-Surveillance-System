@@ -15,15 +15,23 @@ In the [detection_logs](https://github.com/guptavasu1213/IoT-Traffic-Surveillanc
 * tensorflow-gpu 1.13.1
 * CUDA 10.0
 
-
 ```
 pip3 install -r ./traffic_density_measurement_algorithm/requirements.txt
 ```
 
-* Download YoloV4 model weights: [Click Here](https://drive.google.com/file/d/1RLSQB-SFWLsJlDKdoQe4zAOUe858ID2a/view?usp=sharing)
+* Download YoloV4 model weights and move the in [this](https://github.com/guptavasu1213/IoT-Traffic-Surveillance-System/tree/master/cloud_server/traffic_density_measurement_algorithm/model_data) folder: [Click Here](https://drive.google.com/file/d/1RLSQB-SFWLsJlDKdoQe4zAOUe858ID2a/view?usp=sharing)
 
 ## Usage
 In order to initialize the server, we run the following from the current folder:
+* `--encoding_time` or `-et` is an optional argument used to pass the duration of video analysis to calculate the encoding parameters (in seconds) 
+```
+python3 server.py [-et <encoding_time>]
+```
+* Example
 ```
 python3 server.py
+```
+OR
+```
+python3 server.py -et 20
 ```

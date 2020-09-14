@@ -36,4 +36,4 @@ except socket.error as e:
 	clientSocket.close()
 	sys.exit(1)
 
-print("Registation Message Sent!")
+print("Registration Message Sent!")

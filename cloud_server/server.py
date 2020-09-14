@@ -12,7 +12,6 @@ def server():
     '''
     Initiates the server and listens for the clients to connect
     '''
-    #Server port
     serverPort = 12000
     
     #Create server socket that uses IPv4 and TCP protocols 

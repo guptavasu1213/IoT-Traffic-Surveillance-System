@@ -160,14 +160,6 @@ def get_video_resolution(videoPath):
 			resolution = re.search('([1-9]\d+x\d+)', line).group(1)
 			return [int(val) for val in resolution.strip().split('x')]
 
-############################
-import time
-def dummySleep(max_time):
-	st = time.time()
-	while time.time() - st < max_time:  # Goes through the loop for the specified time
-		continue
-############################
-
 def main_listen():
 	'''
 	To listen to the folder with received files, this process communicates with the parent
@@ -189,17 +181,12 @@ def main_listen():
 	signal.signal(signal.SIGUSR2, signalEncodeParams)
 	signal.signal(signal.SIGINT, terminateProcess)
 
-	print('*****************My PID is:', os.getpid(), "PPID is:", ppid, "*****************")
-
 	sortedFiles = []
 
 	# Send a ready signal to the parent process
 	os.kill(ppid, signal.SIGUSR2)
-	print("===================================================READY SENT")
 	while True:
-		# print("SLEEP----------------------")
 		signal.pause()
-		print("WOKEUP---------------------", numVideosReceived)
 
 		# Loop runs until the all the videos received have been analyzed
 		while numVideosAnalyzed < numVideosReceived:
@@ -225,7 +212,7 @@ def main_listen():
 
 				#Removes all files in the encoding folder (if any)
 				fPath = os.path.join(encoding_folder_path, "videos")
-				if len(os.listdir(fPath)): ############## REMOVE AT THE END
+				if len(os.listdir(fPath)):
 					os.system("rm {}/*.mp4".format(fPath))
 
 			# Perform vehicle counting
@@ -233,19 +220,15 @@ def main_listen():
 
 			if 	numVideosAnalyzed+1 >= start_vid_num and \
 				numVideosAnalyzed+1 <=  start_vid_num + NUM_VIDEOS_FOR_ENCODING-1:
-				print("IN RANGE with", videoFile, "========")
 
 				# Move the video to the encoding folder
 				os.rename(videoAbsPath, os.path.join(encoding_folder_path, "videos", videoFile))
 
 				if numVideosAnalyzed+1 ==  start_vid_num + NUM_VIDEOS_FOR_ENCODING-1:
 					# if at the last video, compute the encoding parameters
-					print("LAST with", videoFile, "========")
-
 					high_resolution_count = get_vehicle_count()
 					# Saving all the tracking components for the vehicle counting
 					save_tracking_components()
-					print("\n\n===============================ENCODINGGG++++++++++++++++++++++\n\n")
 					calculate_encoding_params(encoding_folder_path, high_resolution_count, count_vehicles,
 											  initialize_vars, line_coordinates, resolution)
 					# Restoring all the tracking components for the vehicle counting
@@ -253,15 +236,11 @@ def main_listen():
 					# Signalling the parent to notify the calculation of encoding parameters
 					os.kill(ppid, signal.SIGABRT)
 			else:
-				print("NORMAL ANALYSIS", videoFile)
-				# dummySleep(1)
-
 				#Removing file after analysis
 				os.remove(videoAbsPath)
 			numVideosAnalyzed += 1
 
-		# numVideosAnalyzed, numVideosReceived = 0, 0 #Reset variables
 		if terminate:
-			print("Terminating video now", "=" * 8)
+			print("=x" * 8, "Terminating analysis now", "=x" * 8)
 			exit(0)
 main_listen()

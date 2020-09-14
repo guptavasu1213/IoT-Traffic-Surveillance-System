@@ -3,14 +3,6 @@ import os
 #Error threshold for computing the optimal parameters
 THRESHOLD = 0.20
 
-##################### REMOVE THIS FROM HERE
-import time
-def dummySleep(max_time):
-	st = time.time()
-	while time.time() - st < max_time:  # Goes through the loop for the specified time
-		continue
-#####################
-
 def sortFiles(fileList):
 	'''
 	The list of files is sorted and returned back
@@ -47,7 +39,7 @@ def grid_search(video_path, path_to_folder, high_resolution_count, count_vehicle
 		initialize_vars(line_coordinates, currentResolution)
 		#Run the detection with this file
 		vehicle_count = count_vehicles(temp_output_file)
-		print("\n\n==========> MY COUNT:", vehicle_count, "HIGH RES:", high_resolution_count)
+		print("\n\nCount with given encoding: {}\tHIGH RES: {}".format(vehicle_count, high_resolution_count))
 		# If the error is within the threshold, then break
 		detection_error = abs(high_resolution_count - vehicle_count) / high_resolution_count
 		print(detection_error, THRESHOLD)

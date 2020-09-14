@@ -48,10 +48,12 @@ def sortFiles(fileList):
 def client(fogNodeName, cameraName, server_IP, server_port, max_encoding_calc_time):
 	'''
 	Initiates the client and attempts to build a connection with the server
-	:param fogNodeName:
-	++++++++++++++++++++++
-	++++++++++++++++++++++
-	:param max_encoding_calc_time: The time interval at which the high resolution video with is sent for calculating the encoding
+	:param fogNodeName: Fog node name
+	:param cameraName: Camera Name
+	:param server_IP: IP address of the server to connect with
+	:param server_port: Port number of the server to connect with
+	:param max_encoding_calc_time: The time interval at which the high resolution video with is sent for
+	calculating the encoding (in seconds)
 	'''
 
 	#Create client socket that using IPv4 and TCP protocols

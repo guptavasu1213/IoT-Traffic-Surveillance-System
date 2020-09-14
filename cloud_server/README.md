@@ -24,14 +24,14 @@ pip3 install -r ./traffic_density_measurement_algorithm/requirements.txt
 ## Usage
 In order to initialize the server, we run the following from the current folder:
 * `--encoding_time` or `-et` is an optional argument used to pass the duration of video analysis to calculate the encoding parameters (in seconds) 
-```
-python3 server.py [-et <encoding_time>]
-```
+    ```
+    python3 server.py [-et <encoding_time>]
+    ```
 * Example
-```
-python3 server.py
-```
-OR
-```
-python3 server.py -et 20
-```
+    ```
+    python3 server.py
+    ```
+    OR
+    ```
+    python3 server.py -et 20
+    ```

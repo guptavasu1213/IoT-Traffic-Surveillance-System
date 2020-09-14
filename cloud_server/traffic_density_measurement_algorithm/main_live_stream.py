@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 from PIL import Image
 from yolo import YOLO
+import time
 
 from deep_sort import preprocessing
 from deep_sort import nn_matching
@@ -78,27 +79,35 @@ def reload_from_saved():
 
 def initialize_vars(coordinates, currentResolution):
     '''
-
+    Initialize variables at the beginning of an encoding calculation request
     '''
     global line_counter, vehicle_count, counter, tracker, metric
     vehicle_count = 0
     line_counter = Counter(coordinates, currentResolution)
-    counter = [] ####MAYBE TAKE IT OUT
+    counter = []
     metric = nn_matching.NearestNeighborDistanceMetric("cosine", max_cosine_distance, nn_budget)
-    tracker = Tracker(metric) ####MAYBE TAKE IT OUT
+    tracker = Tracker(metric)
 
 def write_count(count_file_path):
+    '''
+    Writing the count value to the log file
+    '''
     global vehicle_count
     # Writing to a log file
     with open(count_file_path, 'a') as file:
         file.write(str(vehicle_count)+"\n")
 
 def get_vehicle_count():
+    '''
+    Returns the vehicle count
+    '''
     return vehicle_count
 
-import time
-
 def count_vehicles(video_file_path):
+    '''
+    Counting the vehicles on the video with the given path.
+    :param video_file_path: Path of the video to be analyzed
+    '''
     video_capture = cv2.VideoCapture(video_file_path)
 
     fps = 0.0
@@ -195,7 +204,7 @@ def count_vehicles(video_file_path):
 
         fps = (fps + (1. / (time.time() - t1))) / 2
 
-        pbar.update(1)
+        pbar.update(1) #Updating the progress bar on the terminal window
 
         # Press Q to stop!
         if cv2.waitKey(1) & 0xFF == ord('q'):

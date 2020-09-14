@@ -25,5 +25,5 @@ if len(os.listdir("./surveillance-cam-videos/"+cam_name)) == 0:
 	print("No camera files in the folder")
 	exit(1)
 
-# Estabilish a connection with the server for the given fog and camera
+# Establish a connection with the server for the given fog and camera
 client(fog_node_name, cam_name, args["ip_address"], args["port_number"], args["encoding_interval"]*60)

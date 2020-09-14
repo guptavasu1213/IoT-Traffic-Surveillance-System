@@ -4,7 +4,6 @@ created and the line coordinates for traffic density measurement are set.
 '''
 
 import os
-import argparse
 
 def register(fog_node_name, camera_name, coordinates):
 	'''

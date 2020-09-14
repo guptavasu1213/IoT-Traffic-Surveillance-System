@@ -4,8 +4,10 @@ def get_slope(line):
 	'''
 	Calculate slope using the formula: (y2-y1)/(x2-x1)
 	'''
-	###########Can crash if x1 == x2
-	return (line[1][1]-line[0][1])/(line[1][0]-line[0][0])
+	try:
+		return (line[1][1]-line[0][1])/(line[1][0]-line[0][0])
+	except: #Crashes if denominator is zero
+		return 0
 def get_intercept(line, slope):
 	'''
 	Calculate intercept using formula: y - mx = b
@@ -67,7 +69,8 @@ class Counter():
 		Just plug each corner (x,y) of the rectangle into ax+by+c. 
 		A corner point is on the line if the result is zero. 
 		If it's not zero then the sign indicates which side of the line the point lies. 
-		If all points of the rectangle have the same sign after plugging them into the line equation then they all lay on the same side of the line and no intersection exists. 
+		If all points of the rectangle have the same sign after plugging them into the line equation then they all lay
+		on the same side of the line and no intersection exists.
 		If signs differ, an intersection exists.
 
 		Params: bbox contains x1, y1, x2, y2 for the bounding box 

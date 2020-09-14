@@ -33,7 +33,7 @@ def receiveAcknowlegdement(socket, message="OK"):
 	This function waits to receive a message at the given socket.
 	If the expected message is not received, then the program terminates.
 	By default, the message is "OK", but can be changed
-	:param socket: Socket with which the connection has already been estabilished
+	:param socket: Socket with which the connection has already been established
 	:param message: [Optional] The expected message through the socket
 	'''
 	if socket.recv(2048).decode('ascii') != message:
@@ -44,7 +44,7 @@ def sendAcknowledgment(socket, message="OK"):
 	'''
 	This function sends a message through the passed socket.
 	By default, the message is "OK", but can be changed
-	:param socket: Socket with which the connection has already been estabilished
+	:param socket: Socket with which the connection has already been established
 	:param message: [Optional] The message to be sent to through the socket
 	'''
 	socket.send(message.encode('ascii'))
@@ -98,12 +98,10 @@ def receiveFiles(connectionSocket, folderName, listeningProcessPid, fogName, cam
 				if recvfile.startswith(encodingCalculationByte):
 					videoReceived = videoReceived[len(encodingCalculationByte):]
 					calculateEncodingParams = True
-					print("ENCODING CALCULATION REQUEST RECEIVED")
 
 				if recvfile.endswith(videoTerminationByte):
 					videoReceived = videoReceived[:-len(videoTerminationByte)]
 					count_files += 1
-					print("FILE RECEIVED")
 					# If encoding parameters are calculated, send them to the fog node
 					if sendEncodingParams:
 						parameters = getEncodingParameters(fogName, cameraName)
@@ -123,7 +121,6 @@ def receiveFiles(connectionSocket, folderName, listeningProcessPid, fogName, cam
 
 				# When encoding parameters have to be calculated, send its signal
 				if calculateEncodingParams:
-					print("SEND ENCODING SIGNAL TO CHILD")
 					# Send a signal to denote that the
 					os.kill(listeningProcessPid, signal.SIGUSR2)
 					calculateEncodingParams = False
@@ -138,7 +135,6 @@ def receiveFiles(connectionSocket, folderName, listeningProcessPid, fogName, cam
 						break
 					else:
 						signal.pause()
-						print("========= AFTRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
 
 	# Terminate the listening process
 	os.kill(listeningProcessPid, signal.SIGINT)

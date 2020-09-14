@@ -36,7 +36,7 @@ COLORS = np.random.randint(0, 255, size=(200, 3),
                            dtype="uint8")
 
 # Path to the vehicle counting algorithm folder
-PATH_TO_FOLDER = "vehicle_counting_algorithm"
+PATH_TO_FOLDER = "traffic_density_measurement_algorithm"
 
 max_cosine_distance = 0.3
 nn_budget = None

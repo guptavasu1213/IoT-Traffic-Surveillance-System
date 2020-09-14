@@ -17,23 +17,23 @@ registration_message = "REGISTER CAM~{}~{}~{}".format(args["fog_name"].strip(),
 
 #Create client socket that using IPv4 and TCP protocols
 try:
-	clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 except socket.error as e:
 	print('Error in client socket creation:',e)
 	sys.exit(1)
 
 try:
 	#Client connect with the server
-	clientSocket.connect((args["ip_address"], args["port_number"]))
+	client_socket.connect((args["ip_address"], args["port_number"]))
 
 	#Send Registation Message
-	clientSocket.send(registration_message.encode('ascii'))
+	client_socket.send(registration_message.encode('ascii'))
 
-	clientSocket.close()
+	client_socket.close()
 
 except socket.error as e:
 	print('An error occurred:',e)
-	clientSocket.close()
+	client_socket.close()
 	sys.exit(1)
 
 print("Registration Message Sent!")

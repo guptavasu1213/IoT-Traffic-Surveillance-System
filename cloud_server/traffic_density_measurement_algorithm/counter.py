@@ -20,11 +20,11 @@ def get_line_result(x, y, m, b):
 	'''
 	return (m*x) - y + b 
 
-def format_coordinates(lines, currentResolution):
+def format_coordinates(lines, current_resolution):
 	'''
 	Scales the line(s) coordinates according to the size of the input video resolution
 	:param lines: String containing the coordinates of the line(s)
-	:param currentResolution: List which contains the width and height of the current resolution
+	:param current_resolution: List which contains the width and height of the current resolution
 	'''
 	line_coord = []
 	for val in lines.split(";"):
@@ -32,7 +32,7 @@ def format_coordinates(lines, currentResolution):
 		points = val.strip().split(',')
 		for i in range(2):
 			p = (int(points[i*2].strip()), int(points[(i*2)+1].strip()))
-			p = (round(p[0]*currentResolution[0]/100), round(p[1]*currentResolution[1]/100))
+			p = (round(p[0] * current_resolution[0] / 100), round(p[1] * current_resolution[1] / 100))
 			line_coord[-1].append(p)
 	return line_coord
 
@@ -40,22 +40,22 @@ class Counter():
 	'''
 	Counts the vehicles which have intersected with the line
 	'''
-	def __init__(self, lines, currentResolution):
-		lines = format_coordinates(lines, currentResolution)
-		self.trackedID = set()
+	def __init__(self, lines, current_resolution):
+		lines = format_coordinates(lines, current_resolution)
+		self.tracked_id = set()
 		self.lines = []
-		self.slopesAndIntercepts = [] #Stores slopes and intercepts for all lines
-		self.setupLines(lines)
+		self.slopes_and_intercepts = [] #Stores slopes and intercepts for all lines
+		self.setup_lines(lines)
 
-	def setupLines(self, lines):
+	def setup_lines(self, lines):
 		for line in lines:
 			m = get_slope(line)
 			b = get_intercept(line, m)
 			self.lines.append(line)
-			self.slopesAndIntercepts.append((m, b)) 
+			self.slopes_and_intercepts.append((m, b))
 
-	def addToTrackedList(self, objectID):
-		self.trackedID.add(objectID)
+	def add_to_tracked_list(self, object_id):
+		self.tracked_id.add(object_id)
 
 	def get_lines(self):
 		return self.lines
@@ -83,7 +83,7 @@ class Counter():
 		br = (bbox[2], bbox[3]) #Bottom right
 
 		# For each line
-		for i, (m, b) in enumerate(self.slopesAndIntercepts):
+		for i, (m, b) in enumerate(self.slopes_and_intercepts):
 			solutions = []
 			# Iterating through each corner of the bbox
 			for point in [tl, tr, bl, br]:                                

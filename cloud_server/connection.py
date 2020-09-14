@@ -4,31 +4,31 @@ import subprocess
 
 # Handler flags
 listening = False
-receiveMoreVideos = False
-sendEncodingParams = False
+receive_more_videos = False
+send_encoding_params = False
 
-def listeningProcessReady(signum, stack):
+def listening_process_ready(signum, stack):
 	'''
 	Signal handler for SIGUSR2 to specify that the child process is ready to listen
 	'''
 	global listening
 	listening = True
 
-def listeningProcessReceivedVideo(signum, stack):
+def listening_process_received_video(signum, stack):
 	'''
 	Signal handler for SIGUSR1 to specify that the child process has received the video
 	'''
-	global receiveMoreVideos
-	receiveMoreVideos = True
+	global receive_more_videos
+	receive_more_videos = True
 
-def receiveEncodingParams(signum, stack):
+def receive_encoding_params(signum, stack):
 	'''
 	Signal handler for SIGABRT to notify the sending of encoding parameters to the fog node
 	'''
-	global sendEncodingParams
-	sendEncodingParams = True
+	global send_encoding_params
+	send_encoding_params = True
 
-def receiveAcknowlegdement(socket, message="OK"):
+def receive_acknowlegdement(socket, message="OK"):
 	'''
 	This function waits to receive a message at the given socket.
 	If the expected message is not received, then the program terminates.
@@ -40,7 +40,7 @@ def receiveAcknowlegdement(socket, message="OK"):
 		print("ERROR: Acknowledgement not received")
 		exit(1)
 
-def sendAcknowledgment(socket, message="OK"):
+def send_acknowledgment(socket, message="OK"):
 	'''
 	This function sends a message through the passed socket.
 	By default, the message is "OK", but can be changed
@@ -49,95 +49,97 @@ def sendAcknowledgment(socket, message="OK"):
 	'''
 	socket.send(message.encode('ascii'))
 
-def getEncodingParameters(fogName, cameraName):
+def get_encoding_parameters(fog_name, camera_name):
 	'''
 	Retrieving the calculated encoding parameters for the given fog node and the camera
-	:param cameraName: The name of camera
-	:param fogNodeName: The name of fog node
+	:param fog_name: The name of fog node
+	:param camera_name: The name of camera
 	'''
-	with open("./encoding_videos/{}/{}/params.txt".format(fogName, cameraName), "r") as file:
+	with open("./encoding_videos/{}/{}/params.txt".format(fog_name, camera_name), "r") as file:
 		content = file.read().strip()
 	return content
 
-def receiveFiles(connectionSocket, folderName, listeningProcessPid, fogName, cameraName):
+def receive_files(connection_socket, folder_name, listening_process_pid, fog_name, camera_name):
 	'''
 	The function receives video files from the given socket and saves those videos in
 	the given folder name.
-	:param connectionSocket: Socket with which the connection has already been established
-	:param folderName: Folder name in which the videos have to be stored upon receival
-	:param listeningProcessPid: The process id of the process listening to the video receiving
+	:param connection_socket: Socket with which the connection has already been established
+	:param folder_name: Folder name in which the videos have to be stored upon receival
+	:param listening_process_pid: The process id of the process listening to the video receiving
+	:param fog_name: The name of fog node
+	:param camera_name: The name of camera
 	'''
 	#Setup handler
-	signal.signal(signal.SIGUSR1, listeningProcessReceivedVideo)
-	signal.signal(signal.SIGABRT, receiveEncodingParams)
+	signal.signal(signal.SIGUSR1, listening_process_received_video)
+	signal.signal(signal.SIGABRT, receive_encoding_params)
 
-	global receiveMoreVideos, sendEncodingParams
+	global receive_more_videos, send_encoding_params
 
 	count_files = 0  # Num of files received
 
 	# Byte which denotes the calculation of encoding parameters
-	encodingCalculationByte = "CALC".encode('ascii')
+	encoding_calculation_byte = "CALC".encode('ascii')
 
 	# Byte which denotes the video termination
-	videoTerminationByte = "END".encode('ascii')
+	video_termination_byte = "END".encode('ascii')
 
 	# A flag to denote that the server has to compute the encoding params
-	calculateEncodingParams = False
+	calculate_encoding_params = False
 
-	receivedAllVideos = False
+	received_all_videos = False
 	# Receiving the video file
-	while not receivedAllVideos:
-		fileName = "{}.mp4".format(str(count_files))
-		videoReceived = bytes()  # Video initialization
-		with open(os.path.join(folderName, fileName), 'wb') as file:
+	while not received_all_videos:
+		file_name = "{}.mp4".format(str(count_files))
+		video_received = bytes()  # Video initialization
+		with open(os.path.join(folder_name, file_name), 'wb') as file:
 			# Receiving the video until the termination
 			while True:
-				recvfile = connectionSocket.recv(4096)
-				videoReceived += recvfile  # Appending to the received video
+				recvfile = connection_socket.recv(4096)
+				video_received += recvfile  # Appending to the received video
 
-				if recvfile.startswith(encodingCalculationByte):
-					videoReceived = videoReceived[len(encodingCalculationByte):]
-					calculateEncodingParams = True
+				if recvfile.startswith(encoding_calculation_byte):
+					video_received = video_received[len(encoding_calculation_byte):]
+					calculate_encoding_params = True
 
-				if recvfile.endswith(videoTerminationByte):
-					videoReceived = videoReceived[:-len(videoTerminationByte)]
+				if recvfile.endswith(video_termination_byte):
+					video_received = video_received[:-len(video_termination_byte)]
 					count_files += 1
 					# If encoding parameters are calculated, send them to the fog node
-					if sendEncodingParams:
-						parameters = getEncodingParameters(fogName, cameraName)
-						sendAcknowledgment(connectionSocket, parameters)
-						sendEncodingParams = False
+					if send_encoding_params:
+						parameters = get_encoding_parameters(fog_name, camera_name)
+						send_acknowledgment(connection_socket, parameters)
+						send_encoding_params = False
 					#Else, send an "OK" acknowledgement
 					else:
-						sendAcknowledgment(connectionSocket)
+						send_acknowledgment(connection_socket)
 					break
 				elif not recvfile:  # When client connection terminates
-					receivedAllVideos = True
-					os.remove(os.path.join(folderName, fileName))
+					received_all_videos = True
+					os.remove(os.path.join(folder_name, file_name))
 					break
 			# Writing to a file and notifying the listening process about the file receival
-			if not receivedAllVideos:
-				file.write(videoReceived)
+			if not received_all_videos:
+				file.write(video_received)
 
 				# When encoding parameters have to be calculated, send its signal
-				if calculateEncodingParams:
+				if calculate_encoding_params:
 					# Send a signal to denote that the
-					os.kill(listeningProcessPid, signal.SIGUSR2)
-					calculateEncodingParams = False
+					os.kill(listening_process_pid, signal.SIGUSR2)
+					calculate_encoding_params = False
 				# Otherwise, send the normal video receival signal
 				else:
-					os.kill(listeningProcessPid, signal.SIGUSR1)
+					os.kill(listening_process_pid, signal.SIGUSR1)
 
 				#Wait for the listening process to receive the video
 				while True:
-					if receiveMoreVideos:
-						receiveMoreVideos = False
+					if receive_more_videos:
+						receive_more_videos = False
 						break
 					else:
 						signal.pause()
 
 	# Terminate the listening process
-	os.kill(listeningProcessPid, signal.SIGINT)
+	os.kill(listening_process_pid, signal.SIGINT)
 
 def check_camera_registration(folder_path):
 	'''
@@ -148,13 +150,13 @@ def check_camera_registration(folder_path):
 		print("ERROR: The camera is not registered.")
 		exit(1)
 
-def is_registation_request(connectionSocket):
+def is_registation_request(connection_socket):
 	'''
 	Check if the message sent by the fog node is for registering new devices
 	The program registers the camera and exits if the registration message is received.
 	:return : Fog node and camera name (if the program does not exit)
 	'''
-	message = connectionSocket.recv(2048).decode('ascii')
+	message = connection_socket.recv(2048).decode('ascii')
 	splitted_message = message.split("~")
 	if message.startswith("REGISTER CAM"):
 		print("Camera Registration Message received!")
@@ -168,18 +170,18 @@ def is_registation_request(connectionSocket):
 		exit(0)
 	return splitted_message
 
-def receiveAndAnalyzeVideos(connectionSocket, encoding_time):
+def receive_and_analyze_videos(connection_socket, encoding_time):
 	'''
 	- Receives the information about the fog node and camera
 	- Sets up a process to listen to the incoming files in the camera folder
 	- Receive the files from the client
-	:param connectionSocket: Socket with which the connection has already been estabilished
+	:param connection_socket: Socket with which the connection has already been estabilished
 	:param encoding_time: The duration of video analysis to calculate the encoding parameters 
 	'''
-	signal.signal(signal.SIGUSR2, listeningProcessReady)
+	signal.signal(signal.SIGUSR2, listening_process_ready)
 
-	fog_name, camera_name, duration = is_registation_request(connectionSocket)
-	sendAcknowledgment(connectionSocket)
+	fog_name, camera_name, duration = is_registation_request(connection_socket)
+	send_acknowledgment(connection_socket)
 
 	print("Fog name is:", fog_name)
 	print("Cam name is:", camera_name)
@@ -200,8 +202,7 @@ def receiveAndAnalyzeVideos(connectionSocket, encoding_time):
 			break
 
 	# Receive files from the socket and store them
-	receiveFiles(connectionSocket, folder_path, process.pid, fog_name, camera_name)
+	receive_files(connection_socket, folder_path, process.pid, fog_name, camera_name)
 
 	print("Closing socket")
-	connectionSocket.close()
-receiveAndAnalyzeVideos
+	connection_socket.close()

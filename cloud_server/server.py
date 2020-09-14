@@ -12,18 +12,18 @@ def server():
     '''
     Initiates the server and listens for the clients to connect
     '''
-    serverPort = 12000
+    server_port = 12000
     
     #Create server socket that uses IPv4 and TCP protocols 
     try:
-        serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     except socket.error as e:
         print('Error in server socket creation:',e)
         sys.exit(1)
     
     #Associate 12000 port number to the server socket
     try:
-        serverSocket.bind(('', serverPort))
+        server_socket.bind(('', server_port))
     except socket.error as e:
         print('Error in server socket binding:',e)
         sys.exit(1)        
@@ -31,13 +31,13 @@ def server():
     print('The server is ready to accept connections')
         
     #Specify the queue size waiting for acceptance
-    serverSocket.listen(5)
+    server_socket.listen(5)
     
     while 1:
         try:            
             #Server accepts client connection
-            connectionSocket, addr = serverSocket.accept()
-            print(addr,'   ',connectionSocket)
+            connection_socket, addr = server_socket.accept()
+            print(addr,'   ',connection_socket)
             
             pid = os.fork()
 
@@ -45,15 +45,15 @@ def server():
                 sys.exit(1)
             # If it is a client process
             elif  pid == 0:
-                serverSocket.close()
-                receiveAndAnalyzeVideos(connectionSocket, str(args["encoding_time"]))
+                server_socket.close()
+                receive_and_analyze_videos(connection_socket, str(args["encoding_time"]))
                 return
             #Parent doesn't need this connection
-            connectionSocket.close()
+            connection_socket.close()
             
         except socket.error as e:
             print('An error occured:',e)
-            serverSocket.close() 
+            server_socket.close()
             sys.exit(1)        
         # except:
         #     print('Goodbye')

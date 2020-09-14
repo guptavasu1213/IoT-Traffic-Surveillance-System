@@ -77,13 +77,13 @@ def reload_from_saved():
     counter = saved_counter
     metric = saved_metric
 
-def initialize_vars(coordinates, currentResolution):
+def initialize_vars(coordinates, current_resolution):
     '''
     Initialize variables at the beginning of an encoding calculation request
     '''
     global line_counter, vehicle_count, counter, tracker, metric
     vehicle_count = 0
-    line_counter = Counter(coordinates, currentResolution)
+    line_counter = Counter(coordinates, current_resolution)
     counter = []
     metric = nn_matching.NearestNeighborDistanceMetric("cosine", max_cosine_distance, nn_budget)
     tracker = Tracker(metric)
@@ -146,8 +146,6 @@ def count_vehicles(video_file_path):
 
         i = int(0)
         indexIDs = []
-        c = []
-        boxes = []
 
         for det in detections:
             bbox = det.to_tlbr()
@@ -163,14 +161,9 @@ def count_vehicles(video_file_path):
             color = [int(c) for c in COLORS[indexIDs[i] % len(COLORS)]]
 
             cv2.rectangle(frame, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (color), 3)
-            b0 = str(bbox[0])  # .split('.')[0] + '.' + str(bbox[0]).split('.')[0][:1]
-            b1 = str(bbox[1])  # .split('.')[0] + '.' + str(bbox[1]).split('.')[0][:1]
-            b2 = str(bbox[2] - bbox[0])  # .split('.')[0] + '.' + str(bbox[3]).split('.')[0][:1]
-            b3 = str(bbox[3] - bbox[1])
 
             cv2.putText(frame, str(track.track_id), (int(bbox[0]), int(bbox[1] - 50)), 0, 5e-3 * 150, (color), 2)
             if len(class_names) > 0:
-                class_name = class_names[0]
                 cv2.putText(frame, str(class_names[0]), (int(bbox[0]), int(bbox[1] - 20)), 0, 5e-3 * 150, (color), 2)
 
             i += 1
@@ -183,8 +176,8 @@ def count_vehicles(video_file_path):
             cv2.circle(frame, (center), 1, color, thickness)
 
             # If the box intersects with the line
-            if line_counter.intersects_with_bbox(bbox) and track.track_id not in line_counter.trackedID:
-                line_counter.addToTrackedList(track.track_id)
+            if line_counter.intersects_with_bbox(bbox) and track.track_id not in line_counter.tracked_id:
+                line_counter.add_to_tracked_list(track.track_id)
                 vehicle_count += 1
 
             # draw motion path
@@ -194,7 +187,6 @@ def count_vehicles(video_file_path):
                 thickness = int(np.sqrt(64 / float(j + 1)) * 2)
                 cv2.line(frame, (pts[track.track_id][j - 1]), (pts[track.track_id][j]), (color), thickness)
 
-        count = len(set(counter))
         cv2.putText(frame, "Total Line Counter: " + str(vehicle_count), (int(20), int(120)), 0, 5e-3 * 200, (0, 255, 0),
                     2)
         cv2.putText(frame, "FPS: %f" % (fps), (int(20), int(40)), 0, 5e-3 * 200, (0, 255, 0), 3)

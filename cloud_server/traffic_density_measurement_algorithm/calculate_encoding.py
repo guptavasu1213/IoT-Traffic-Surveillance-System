@@ -3,26 +3,26 @@ import os
 #Error threshold for computing the optimal parameters
 THRESHOLD = 0.20
 
-def sortFiles(fileList):
+def sort_files(file_list):
 	'''
 	The list of files is sorted and returned back
-	:param fileList: List of file names which are of the form "<integer>.<extension>"
+	:param file_list: List of file names which are of the form "<integer>.<extension>"
 	:return: A list of sorted files
 	'''
-	sortedFilesWithoutExtension = dict()
-	for file in fileList:
+	sorted_files_without_extension = dict()
+	for file in file_list:
 		try:
-			sortedFilesWithoutExtension[(int(file.split(".")[0]))] = file
+			sorted_files_without_extension[(int(file.split(".")[0]))] = file
 		except:
 			print("\n\nERROR: The file name should only contain a number with an extension."
 				  "Example: 1.mp4")
-	sortedFiles = []
-	for file in sorted(sortedFilesWithoutExtension):
-		sortedFiles.append(sortedFilesWithoutExtension[file])
-	return sortedFiles
+	sorted_files = []
+	for file in sorted(sorted_files_without_extension):
+		sorted_files.append(sorted_files_without_extension[file])
+	return sorted_files
 
 def grid_search(video_path, path_to_folder, high_resolution_count, count_vehicles, initialize_vars,
-				line_coordinates, currentResolution):
+				line_coordinates, current_resolution):
 	#CALC THE ENCODING PARAMS BASED ON THE THRESHOLD AND THE EXISTING COUNT
 	bitrate, fps = 100, 7
 	encoding_counter = 1 # Number of times encoding has happened
@@ -36,7 +36,7 @@ def grid_search(video_path, path_to_folder, high_resolution_count, count_vehicle
 		os.system("ffmpeg -i {} -r {} -b:v {}k -an -y {} 2>/dev/null".format(video_path, fps, bitrate, temp_output_file))
 
 		#Initialize the detection
-		initialize_vars(line_coordinates, currentResolution)
+		initialize_vars(line_coordinates, current_resolution)
 		#Run the detection with this file
 		vehicle_count = count_vehicles(temp_output_file)
 		print("\n\nCount with given encoding: {}\tHIGH RES: {}".format(vehicle_count, high_resolution_count))
@@ -57,17 +57,17 @@ def grid_search(video_path, path_to_folder, high_resolution_count, count_vehicle
 	os.remove(temp_output_file)
 	return bitrate, fps
 
-def save_parameters(filepath, bitrate, fps):
+def save_parameters(file_path, bitrate, fps):
 	'''
-	:param filepath: The path of the file in which the parameters have to be written
+	:param file_path: The path of the file in which the parameters have to be written
  	:param bitrate: Bitrate
 	:param fps: Frames per second (fps)
 	'''
-	with open(filepath, 'w') as f:
+	with open(file_path, 'w') as f:
 		f.write("Parameters: Bitrate-{}; FPS-{}".format(bitrate, fps))
 
 def calculate_encoding_params(path_to_folder, high_resolution_count, count_vehicles, initialize_vars,
-							  line_coordinates, currentResolution):
+							  line_coordinates, current_resolution):
 	'''
 	Compute the encoding parameters and save them in a text file
 	:param path_to_folder: Path to the encoding folder
@@ -75,16 +75,16 @@ def calculate_encoding_params(path_to_folder, high_resolution_count, count_vehic
 	:param count_vehicles: Function for counting vehicles
 	:param initialize_vars: Function for initializing variables in the vehicle counting algorithm
 	:param line_coordinates: The line coordinates for the camera used for counting
-	:param currentResolution: The resolution of the video
+	:param current_resolution: The resolution of the video
 	'''
-	fPath = os.path.join(path_to_folder, "videos")
+	f_path = os.path.join(path_to_folder, "videos")
 	temp_file_path = os.path.join(path_to_folder, "file_names.txt")
 	concat_output_file_path = os.path.join(path_to_folder, "videos", "output.mp4")
 	parameter_log_file_path = os.path.join(path_to_folder, "params.txt")
 
 	str_to_write = ""
-	for file in sortFiles(os.listdir(fPath)):
-		str_to_write += "file " + os.path.join(fPath, file) + "\n"
+	for file in sort_files(os.listdir(f_path)):
+		str_to_write += "file " + os.path.join(f_path, file) + "\n"
 
 	with open(temp_file_path, 'w') as f:
 		f.write(str_to_write)
@@ -95,11 +95,11 @@ def calculate_encoding_params(path_to_folder, high_resolution_count, count_vehic
 
 	#Grid search the optimal parameters
 	bitrate, fps = grid_search(concat_output_file_path, path_to_folder, high_resolution_count,
-							   count_vehicles, initialize_vars, line_coordinates, currentResolution)
+							   count_vehicles, initialize_vars, line_coordinates, current_resolution)
 
 	#Save parameters in a log file
 	save_parameters(parameter_log_file_path, bitrate, fps)
 
 	# Removing all the temporary files
 	os.remove(temp_file_path)
-	os.system("rm {}/*.mp4".format(fPath))
+	os.system("rm {}/*.mp4".format(f_path))
